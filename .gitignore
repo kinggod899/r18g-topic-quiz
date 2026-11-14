@@ -1,0 +1,25 @@
+# 只提交网页与生成器，其余一律排除
+
+# 运行产物
+__pycache__/
+*.py[cod]
+选题结果_*.md
+
+# 本地环境
+.env
+.venv/
+venv/
+*.log
+
+# 编辑器
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 防溢出：本目录位于私人创作目录内，任何正文/手册类文件绝不入库
+chapters/
+蜕/
+创作手册.md
+核心锚点_L0.md
+*.txt
