@@ -16,6 +16,7 @@ sys.path.insert(0, BASE)
 
 import r18g_quiz as q
 from 题材解释 import EXPLAINS
+import 作品推荐 as RECO
 
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -37,6 +38,7 @@ def build_data():
             "term": info.get("term", ""),
             "origin": info.get("origin", ""),
             "explain": info.get("explain", ""),
+            "works": RECO.for_topic(t["id"]),
         })
 
     return {
@@ -180,6 +182,14 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .exp .val{font-size:13px;color:var(--dim);line-height:1.9;margin-bottom:14px}
 .exp .val:last-child{margin-bottom:0}
 .exp .val.txt{color:var(--ink);font-size:13.5px}
+.works{display:flex;flex-direction:column;gap:10px}
+.work{padding:10px 12px;background:#121016;border-left:2px solid var(--line)}
+.work .wt{font-size:13.5px;color:var(--ink);margin-bottom:2px}
+.work .wt a{color:var(--gold)}
+.work .wot{font-size:11.5px;color:var(--dim2);margin-left:4px}
+.work .wm{font-size:11px;color:var(--dim2);letter-spacing:.04em}
+.work .wn{font-size:12.5px;color:var(--dim);line-height:1.75;margin-top:3px}
+.aitem-works{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
 .pick{border:1px solid var(--red);background:linear-gradient(180deg,#1d1216,#141015)}
 .pick .lab2{font-size:10.5px;letter-spacing:.26em;color:var(--red2);margin-bottom:12px}
 .pick h3{font-size:24px;margin-bottom:6px}
@@ -275,10 +285,10 @@ function renderStep() {
   app.appendChild(head);
   app.appendChild(el("div", "stepdesc", [
     "",
-    "不问「你喜欢哪个题材」——那个问题没有人答得出真话。这里问的是你在哪几根轴上被击中。",
-    "先把不能碰的划掉，剩下的排序才有意义。硬禁区整类作废，软偏好只往后压。",
-    "同一题材，宫廷版和都市版是两个东西。这一轮决定成品的形状。",
-    "最后两个决定：这一篇要多长一口气，结尾能不能死人。"
+    "先说你在哪几处被击中。选两根最狠的，再挑几个具体画面，剩下的交给程序去算。",
+    "把不能碰的先划掉。硬禁区一踩就整类作废，软偏好只让它往后排。",
+    "同一个题材，放在宫廷和放在都市，写出来是两篇东西。这一轮定形状。",
+    "最后两件：这一篇要多长一口气，结尾能不能死人。"
   ][S.step]));
 
   if (S.step === 1) step1(app);
@@ -292,13 +302,12 @@ function renderStep() {
 function cover(app) {
   const c = el("div", "step cover");
   c.innerHTML = `
-    <div class="kicker">R18G 题材定位 · 题库 v2</div>
+    <div class="kicker">R18G 题材定位</div>
     <h1 class="serif">先量出你的<em>坐标</em>，<br>再谈写什么。</h1>
     <p class="lead">
-      十二道题，四轮。它不问你「喜欢哪个题材」——没有人答得出来，
-      人会挑自己觉得有品位的黑暗，避开让自己真的不适的那些，而后者恰恰常是真正的点。
-      所以这里问的是：你在哪几根轴上被击中，又绝对不能碰什么。
-      答完，四十个题材按你的坐标重排，每个都附名词解释。
+      直接问「你喜欢哪个题材」，答出来的多半不是真的。人会挑自己觉得拿得出手的那些，
+      把真正让自己坐不住的藏起来。所以这里换个问法：你在哪几处被击中，哪些碰都不能碰。
+      十二道题，四轮。答完以后，68 个题材按你的坐标重新排一遍。
     </p>
     <div class="meta">
       <div><b>${D.topics.length}</b>题材</div>
@@ -381,7 +390,7 @@ function step1(app) {
 
 function step2(app) {
   const q4 = qBlock("04", "硬禁区 —— 踩中就整类作废（可多选，可空）",
-    "这条权重比偏好高 3.5 倍。宁可错杀一个匹配，也不要给你一个读到一半想关掉的东西。");
+    "这条的权重是偏好项的三倍半。宁可少推一个，也别推一个你读到一半就想关掉的东西。");
   const o4 = el("div", "opts grid2");
   D.taboos.forEach((t, i) => {
     o4.appendChild(optRow(i + 1, t.n, null, S.taboos.includes(t.k), () => {
@@ -532,7 +541,7 @@ function result(app) {
 
   if (!top.length) {
     w.appendChild(el("div", "card", `<span style="color:var(--red2)">禁区把所有题材都划掉了。</span>
-      <div class="note" style="margin-top:8px">要么回上一步放松一条，要么这些真的不是你的场子。</div>`));
+      <div class="note" style="margin-top:8px">要么回上一步松开一条，要么这些确实不是你要的。</div>`));
     const acts = el("div", "acts");
     const b = el("button", "btn", "回上一步");
     b.onclick = () => go(2);
@@ -544,7 +553,7 @@ function result(app) {
 
   // 排序
   w.appendChild(el("h2", "serif", "题材排序")).style.marginTop = "40px";
-  w.appendChild(el("div", "sub", "分数不是绝对值，是相对你的坐标的匹配度。前几名差 1.5 分以内基本同权。"));
+  w.appendChild(el("div", "sub", "分数只是相对你的坐标算出来的匹配度，不是什么绝对排名。前几名差 1.5 分以内，基本可以当并列看。"));
   const list = el("div", "rank");
 
   top.forEach((r, i) => {
@@ -567,7 +576,8 @@ function result(app) {
       <div class="lab">来历</div><div class="val">${r.t.origin}</div>
       <div class="lab">解释</div><div class="val txt">${r.t.explain}</div>
       <div class="lab">原生场景</div><div class="val">${r.t.scene}</div>
-      <div class="lab">结构三拍</div><div class="val">${r.t.beat}</div>`;
+      <div class="lab">结构三拍</div><div class="val">${r.t.beat}</div>
+      ${renderWorks(r.t.works)}`;
     row.appendChild(exp);
 
     head.onclick = () => exp.classList.toggle("open");
@@ -597,10 +607,10 @@ function result(app) {
       <dt>结尾</dt><dd>${D.ending[S.ending]}</dd>
     </div>
     <div class="todo">
-      <li>三个必须写到的细节，照这个密度写，不许抽象</li>
-      <li>每一段都有身体实况，没有一句是作者在评价</li>
-      <li>承受者有自己的内在，不只是道具</li>
-      <li>结尾没有救赎，情节自己耗尽</li>
+      <li>先定三个具体细节，写的时候照着这个密度来，别停在形容词上</li>
+      <li>每段都要有身体上的实况，别写作者自己的评语</li>
+      <li>承受那一方要有自己的内在，不能只是个道具</li>
+      <li>结尾别给救赎，情节走到哪儿就停在哪儿</li>
     </div>`;
   w.appendChild(pick);
 
@@ -615,7 +625,7 @@ function result(app) {
   const vetoed = rows.filter(r => r.veto).slice(0, 5);
   if (vetoed.length) {
     const v = el("div", "card vetoed");
-    v.innerHTML = `<div class="note" style="margin-bottom:8px">被禁区划掉的（看一眼，确认没有划得太狠）</div>` +
+    v.innerHTML = `<div class="note" style="margin-bottom:8px">这些被禁区划掉了。扫一眼，看是不是划得太狠</div>` +
       vetoed.map(r => `<b>${r.t.name}</b>　${r.why[r.why.length - 1] || "命中硬禁区"}`).join("<br>");
     w.appendChild(v);
   }
@@ -631,6 +641,24 @@ function result(app) {
   w.appendChild(acts);
 
   app.appendChild(w);
+}
+
+const TYPE_CN = { film: "电影", novel: "小说", manga: "漫画", game: "游戏", art: "画集", other: "其他" };
+
+function renderWorks(works) {
+  if (!works || !works.length) return "";
+  const items = works.map(w => {
+    const meta = [w.author, w.year, TYPE_CN[w.type] || w.type].filter(Boolean).join(" · ");
+    const name = w.link
+      ? `<a href="${w.link}" target="_blank" rel="noopener">${w.title}</a>`
+      : w.title;
+    return `<div class="work">
+      <div class="wt">${name}${w.origin_title ? ` <span class="wot">${w.origin_title}</span>` : ""}</div>
+      ${meta ? `<div class="wm">${meta}</div>` : ""}
+      ${w.note ? `<div class="wn">${w.note}</div>` : ""}
+    </div>`;
+  }).join("");
+  return `<div class="lab">参考作品</div><div class="val works">${items}</div>`;
 }
 
 function copyResult(rows, top, best, rec, btn) {
@@ -677,7 +705,7 @@ function fallbackCopy(txt, done) {
 function atlas(app) {
   const w = el("div", "atlas");
   w.innerHTML = `<div class="stephead"><span class="steptag">附录</span><h2 class="serif">题材全谱 · ${D.topics.length}</h2></div>
-    <div class="stepdesc">每一题材的轴坐标、钩子、名词解释与结构三拍。搜索名称或术语可过滤。</div>`;
+    <div class="stepdesc">每个题材的轴坐标、钩子、名词解释和结构三拍。搜名称或术语都能过滤。</div>`;
 
   const inp = el("input", "");
   inp.placeholder = "搜索题材名、术语、关键词……";
@@ -695,6 +723,11 @@ function atlas(app) {
       it.innerHTML = `<h4 class="serif">${String(t.n).padStart(2, "0")}　${t.name}</h4>
         <div class="term">${t.term}</div>
         <div class="ex">${t.explain}</div>
+        ${t.works && t.works.length ? `<div class="aitem-works">${t.works.map(w => {
+          const meta = [w.author, w.year, TYPE_CN[w.type] || w.type].filter(Boolean).join(" · ");
+          const name = w.link ? `<a href="${w.link}" target="_blank" rel="noopener">${w.title}</a>` : w.title;
+          return `<div class="work"><div class="wt">${name}</div>${meta ? `<div class="wm">${meta}</div>` : ""}${w.note ? `<div class="wn">${w.note}</div>` : ""}</div>`;
+        }).join("")}</div>` : ""}
         <div class="ax">${Object.keys(t.axes).map(k => AX[k] + (t.axes[k] > 0 ? "+" : "") + t.axes[k]).join("　")}
           ｜ ${t.hooks.map(h => HK[h]).join("、")}</div>`;
       box.appendChild(it);
