@@ -47,6 +47,7 @@
 | `导出谱系.py` | 由题库导出 `题材谱系.md` |
 | `题材谱系.md` | 全景表：题材 × 轴坐标 × 钩子 |
 | `选题流程.md` | 方法论、来源与迭代方式 |
+| `作品推荐.py` | 作品推荐数据源（按题材 id 挂列表，见下） |
 
 ## 改题库
 
@@ -62,6 +63,32 @@ python build_site.py           # 重新生成 index.html
 
 加一个题材：在 `TOPICS` 里补 `axes` 与 `hooks`，再到 `题材解释.py` 补一条解释，
 重跑 `build_site.py`。
+
+## 作品推荐
+
+每个题材可以挂若干部参考作品，数据在 `作品推荐.py`，结构：
+
+```python
+"RUIN_WIFE": [
+    {
+        "title": "铁男",
+        "origin_title": "鉄男 TETSUO",
+        "author": "塚本晋也",
+        "year": 1989,
+        "type": "film",      # film / novel / manga / game / art / other
+        "note": "身体被异物侵入后一点点不再是人的过程，全片用黑白和金属噪音堆出来。",
+        "tags": ["日本", "身体恐怖"],
+        "link": "",          # 可空
+    },
+],
+```
+
+`origin_title`、`author`、`year`、`note`、`tags`、`link` 都可以留空，
+留空的部分不会渲染。没有合适作品的题材保持空列表 `[]`，页面上就不显示这一栏。
+
+约定：只放已公开出版或发行的作品，`note` 写具体点，别写「很经典」。
+
+写完后重跑 `python build_site.py`，网页会同时更新结果页和题材全谱两处。
 
 ## 题材库的来源
 
