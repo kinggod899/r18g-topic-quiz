@@ -24,13 +24,13 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 # ---------------------------------------------------------------- 轴定义
 
 AXES = [
-    ("POC", "权力落差", "上位者可以毫无代价地处置下位者"),
-    ("BODY", "身体越界", "内脏、骨骼、器官、切割——身体不再完整"),
-    ("PROX", "羞辱亲密", "羞耻本身就是最深的亲密"),
-    ("MIND", "意识剥夺", "被使用者的内在被抹掉，或者反过来吞掉使用者"),
-    ("DEATH", "死亡在场", "尸、濒死、下葬、腐朽——死的重量压在活人身上"),
-    ("SOC", "秩序崩解", "公开、围观、律法失效、看客的沉默"),
-    ("AES", "题材位置", "文体与视角本身就是快感来源"),
+    ("POC", "权力落差", "有人可以随手处置另一个人，不用付代价"),
+    ("BODY", "身体越界", "身上开了口子，少了东西，或者多出不该有的"),
+    ("PROX", "羞辱亲密", "两个人之间最难为情的那部分，被摊开来讲"),
+    ("MIND", "意识剥夺", "一个人的里头被清空，或者反过来把对方吞掉"),
+    ("DEATH", "死亡在场", "尸体、快死的人、下葬、烂掉，这些一直在场"),
+    ("SOC", "秩序崩解", "事情发生在别人眼皮底下，而谁都不管"),
+    ("AES", "题材位置", "用什么口吻、站在谁的角度讲，本身就是重点"),
 ]
 
 # ---------------------------------------------------------------- 钩子池
@@ -125,7 +125,7 @@ TOPICS = [
     {
         "id": "RUIN_WIFE",
         "name": "被毁弃的至亲",
-        "core": "处决一个人，然后当着幸存者的面继续使用她。暴力终结于死亡，占有不终结。",
+        "core": "当着活人的面处决他护不住的人，处决完了，尸体不还给任何人。",
         "axes": {"POC": 2, "PROX": 2, "DEATH": 2, "BODY": 1, "MIND": 1, "SOC": 1},
         "hooks": ["REGICIDE", "STRANGLE", "DEFILE_BODY", "INCEST", "WITNESS"],
         "scene": "处刑台、偏殿、灵堂",
@@ -134,7 +134,7 @@ TOPICS = [
     {
         "id": "PREGNANT_VESSEL",
         "name": "孕体重压",
-        "core": "怀孕在这里不是恩典，是刑期。肚腹一天天变大，权力一天天变重。",
+        "core": "肚子一天比一天大。里头的东西不是她的，她得把它养足月。",
         "axes": {"BODY": 2, "DEATH": 1, "MIND": 2, "POC": 1, "PROX": 1},
         "hooks": ["PREGNANT", "BIRTH", "MISCARRIAGE", "WET", "MOTHER"],
         "scene": "产房、卧榻、晨吐的铜盆边",
@@ -143,7 +143,7 @@ TOPICS = [
     {
         "id": "CHILDBED",
         "name": "产房即刑场",
-        "core": "生产本身就是一场公开的行刑。人命从裂口里出来，谁活着由别人决定。",
+        "core": "产床边上围着人，没有一个是来帮她的。谁活着出去由别人定。",
         "axes": {"BODY": 2, "DEATH": 2, "PROX": 1, "SOC": 1},
         "hooks": ["BIRTH", "MEDICAL", "WET", "MOTHER", "INFANT"],
         "scene": "血泊、银剪、两日夜不灭的灯",
@@ -152,7 +152,7 @@ TOPICS = [
     {
         "id": "CORPSE_WED",
         "name": "与死者成婚",
-        "core": "合法的婚姻，对象已经凉了。仪式照常进行，宾客照常举杯。",
+        "core": "喜帐里坐着的新娘已经凉了。拜堂、合卺、洞房，一步都不少。",
         "axes": {"DEATH": 2, "PROX": 1, "SOC": 2, "MIND": 1},
         "hooks": ["CORPSE_BRIDE", "DEFILE_BODY", "TIME", "INCEST", "PRIEST"],
         "scene": "殡仪馆、喜堂、双份的香烛",
@@ -161,7 +161,7 @@ TOPICS = [
     {
         "id": "TWIN_ECHO",
         "name": "双生替身",
-        "core": "一个被使用，另一个必须看着。她们共享同一张脸，这就是刑罚。",
+        "core": "两个一模一样的身体，一个在被用，另一个必须留在旁边看。",
         "axes": {"MIND": 2, "PROX": 2, "POC": 1, "SOC": 1},
         "hooks": ["TWIN", "WITNESS", "DELUSION", "SILENCE"],
         "scene": "镜前、并排的两张榻",
@@ -170,7 +170,7 @@ TOPICS = [
     {
         "id": "BODY_SWAP",
         "name": "借壳",
-        "core": "身体是可以被搬走的东西。住进去的人用它做完了所有事，原主只能旁观。",
+        "core": "有人住进了她的身体，用她的手做完了一切。她全程在里面看着。",
         "axes": {"MIND": 2, "BODY": 1, "AES": 1, "PROX": 1},
         "hooks": ["SELF", "MECHANICAL", "SILENCE", "TWIN"],
         "scene": "手术台、镜中、出租的身体",
@@ -179,7 +179,7 @@ TOPICS = [
     {
         "id": "LIVESTOCK",
         "name": "豢养",
-        "core": "人被当成畜产：编栏号、称重、配种、宰杀。制度越完整越恐怖。",
+        "core": "编号、称重、配种、出栏。档案做得越齐，这套流程越像正常业务。",
         "axes": {"POC": 2, "BODY": 1, "SOC": 1, "MIND": 1},
         "hooks": ["BEAST", "SERVANT", "MECHANICAL", "INCONT", "COLD"],
         "scene": "栏舍、检疫站、编号的铁牌",
@@ -188,7 +188,7 @@ TOPICS = [
     {
         "id": "AUCTION",
         "name": "牲口拍卖",
-        "core": "验货、开价、落槌。人被摊开在台上，买家伸手翻检。",
+        "core": "被推上台，衣服脱光，买家上来翻检牙口和腿。木槌落下就算成交。",
         "axes": {"POC": 2, "SOC": 2, "PROX": 1},
         "hooks": ["SERVANT", "WITNESS", "MECHANICAL", "INCONT", "COLD"],
         "scene": "拍卖台、验货的皮手套、木槌",
@@ -197,7 +197,7 @@ TOPICS = [
     {
         "id": "RITUAL_SACRIFICE",
         "name": "献祭",
-        "core": "毁形是有程序的。每一步都有颂词，每一步都为了让人活着被拆开。",
+        "core": "净身、诵词、开口、放血，一步一步来。全程都有人念着，没人喊停。",
         "axes": {"DEATH": 2, "SOC": 2, "BODY": 1, "POC": 1},
         "hooks": ["SACRIFICE", "PRIEST", "REGICIDE", "DEFILE_BODY", "MECHANICAL"],
         "scene": "祭坛、石槽、诵经声",
@@ -206,7 +206,7 @@ TOPICS = [
     {
         "id": "PRIEST_CELL",
         "name": "忏悔室与教权",
-        "core": "罪被说出来，然后被用来交换。赦免是有价钱的，付的是身体。",
+        "core": "隔着一道木格，她得把最难开口的事说出来。赦免的价钱由对面那个人定。",
         "axes": {"SOC": 1, "MIND": 2, "PROX": 2, "POC": 1},
         "hooks": ["PRIEST", "DELUSION", "WITNESS", "SILENCE"],
         "scene": "告解格、烛、看不见脸的窗",
@@ -215,7 +215,7 @@ TOPICS = [
     {
         "id": "SURGEON",
         "name": "医者与病体",
-        "core": "白布、器械、知情同意。最文明的场景承载最原始的权力。",
+        "core": "麻醉、消毒、铺单、下刀。所有人都很专业，所以谁也不必解释这是为什么。",
         "axes": {"BODY": 2, "POC": 1, "PROX": 1, "MIND": 1},
         "hooks": ["MEDICAL", "MECHANICAL", "AMPUTATE", "WOUND_SEX", "WET"],
         "scene": "无影灯、脱毛的皮肤、托盘",
@@ -224,7 +224,7 @@ TOPICS = [
     {
         "id": "NEEDLE",
         "name": "针刺与经络",
-        "core": "细密的侵入，一寸一寸。疼是准时的，快感是迟到的。",
+        "core": "一根细针慢慢推进去，深浅由握针的人说了算。疼是准时的，别的不是。",
         "axes": {"BODY": 2, "MIND": 1, "PROX": 1},
         "hooks": ["NEEDLE", "MECHANICAL", "MEDICAL", "SILENCE"],
         "scene": "银针、穴位图、被固定住的手腕",
@@ -233,7 +233,7 @@ TOPICS = [
     {
         "id": "EYE_SCENE",
         "name": "眼部",
-        "core": "剥夺目睹权。看不见的人，才最清楚正在发生什么。",
+        "core": "先把眼皮撑开，让她不能不看着。之后她连闭上眼睛都算一种奢侈。",
         "axes": {"BODY": 2, "MIND": 1, "DEATH": 1},
         "hooks": ["EYE", "MECHANICAL", "DISFIGURE", "WITNESS"],
         "scene": "蒙眼的布、困住的眼皮、镜片",
@@ -242,7 +242,7 @@ TOPICS = [
     {
         "id": "LIMB",
         "name": "切割与残缺",
-        "core": "少了一部分的身体更好用。残肢成了新的接口。",
+        "core": "锯掉之后，剩下的那截得重新学着做事。原来的用法永远回不去了。",
         "axes": {"BODY": 2, "DEATH": 1, "POC": 1},
         "hooks": ["AMPUTATE", "MEDICAL", "DISFIGURE", "MECHANICAL"],
         "scene": "锯、止血带、地上的形状",
@@ -251,7 +251,7 @@ TOPICS = [
     {
         "id": "GELDING",
         "name": "去势",
-        "core": "不是杀死，是把某种可能性永久摘掉。人还活着，只是从此不一样了。",
+        "core": "不是杀她，是把她从「能生育的那一类」里划掉。她还活着，只是从此归到别处。",
         "axes": {"BODY": 2, "POC": 2, "PROX": 1, "MIND": 1},
         "hooks": ["AMPUTATE", "MEDICAL", "MECHANICAL", "SERVANT", "COLD"],
         "scene": "宫刑房、烧红的铁、验身的人",
@@ -260,7 +260,7 @@ TOPICS = [
     {
         "id": "DISFIGURE",
         "name": "毁容",
-        "core": "美被当场销毁。销毁者通常最爱这张脸。",
+        "core": "当着她的面毁掉这张脸。动手的人往往是最舍不得这张脸的那个。",
         "axes": {"BODY": 1, "PROX": 2, "SOC": 1, "MIND": 1},
         "hooks": ["DISFIGURE", "WITNESS", "DELUSION", "SELF"],
         "scene": "铜镜、炭火、撕开的布",
@@ -269,7 +269,7 @@ TOPICS = [
     {
         "id": "DINNER",
         "name": "宴席",
-        "core": "人被端上桌。席间所有人都在谈别的，这就是最狠的一层。",
+        "core": "摆在长桌中间，银盖揭开，主人先动筷。其余人接着聊他们的事。",
         "axes": {"SOC": 2, "POC": 2, "DEATH": 1, "PROX": 1},
         "hooks": ["DINNER", "WITNESS", "SERVANT", "PRIEST"],
         "scene": "长桌、银盖、祝酒词",
@@ -278,7 +278,7 @@ TOPICS = [
     {
         "id": "BEAST",
         "name": "异种与兽性",
-        "core": "不是人的东西拥有人的身体。反抗没有对象，求饶没有语言。",
+        "core": "对方没有人形，也没有语言。她求饶的时候，不知道该对谁说。",
         "axes": {"BODY": 2, "MIND": 1, "PROX": 1},
         "hooks": ["BEAST", "WET", "PARASITE", "SILENCE"],
         "scene": "厩、林、被拴住的颈圈",
@@ -287,7 +287,7 @@ TOPICS = [
     {
         "id": "INSECT",
         "name": "虫",
-        "core": "数量就是暴力。个体太小，所以无处可挡。",
+        "core": "挡得住一只，挡不住一整片。它们从每一个她够不着的地方进来。",
         "axes": {"BODY": 2, "MIND": 1},
         "hooks": ["INSECT", "PARASITE", "WET", "MECHANICAL"],
         "scene": "缝隙、皮下、灯下的一层",
@@ -296,7 +296,7 @@ TOPICS = [
     {
         "id": "MACHINE",
         "name": "器械",
-        "core": "人退出以后，程序还在继续。谁是施害者已经说不清。",
+        "core": "上架、设定、启动，然后人走开。剩下的由装置自己做完，做得很准。",
         "axes": {"BODY": 2, "POC": 1, "AES": 1},
         "hooks": ["MECHANICAL", "WITNESS", "COLD", "MEDICAL"],
         "scene": "滑轮、刻度、定时",
@@ -305,7 +305,7 @@ TOPICS = [
     {
         "id": "GALLOWS",
         "name": "绞杀与悬吊",
-        "core": "呼吸是可以被收取的东西。收的人不急，被收的人很急。",
+        "core": "绳结收上去，脚底那块板抽掉。呼吸从这一刻起不归她自己管。",
         "axes": {"DEATH": 2, "POC": 1, "BODY": 1, "PROX": 1},
         "hooks": ["STRANGLE", "REGICIDE", "WITNESS", "CORPSE_WET"],
         "scene": "白绫、绳结、脚下那块木板",
@@ -314,7 +314,7 @@ TOPICS = [
     {
         "id": "PUBLIC_SQUARE",
         "name": "公开处刑",
-        "core": "围观者才是刑具。他们什么都不做，这就是参与。",
+        "core": "台子搭在广场正中，宣读完就动手。底下站着的人什么也不做，这就是全部。",
         "axes": {"SOC": 2, "POC": 2, "PROX": 1, "DEATH": 1},
         "hooks": ["WITNESS", "REGICIDE", "SERVANT", "DISFIGURE"],
         "scene": "广场、告示、挤到前面的人",
@@ -323,7 +323,7 @@ TOPICS = [
     {
         "id": "WATCHER",
         "name": "目击者的位置",
-        "core": "不参与的人也在被改造。看，是一种缓慢的性。",
+        "core": "他站在门后看得见全部，也没有权力喊停。事后他记得最清的是自己的手。",
         "axes": {"MIND": 2, "PROX": 2, "AES": 1},
         "hooks": ["WITNESS", "DELUSION", "SILENCE", "COLD"],
         "scene": "门缝、帘后、隔着屏风的椅子",
@@ -332,7 +332,7 @@ TOPICS = [
     {
         "id": "COLD_RECORD",
         "name": "冷记录",
-        "core": "用卷宗、验尸单、日记的口吻写最脏的事。距离感就是快感。",
+        "core": "用卷宗和验尸单的口气记最脏的事：编号、部位、尺寸、处置结果。",
         "axes": {"AES": 2, "MIND": 1, "SOC": 1},
         "hooks": ["COLD", "MECHANICAL", "MEDICAL", "TIME"],
         "scene": "卷宗、判词、编号的物证袋",
@@ -341,7 +341,7 @@ TOPICS = [
     {
         "id": "LOVE_DELUSION",
         "name": "爱之妄念",
-        "core": "加害者坚信自己在爱。这份确信比任何刑具都锋利。",
+        "core": "他真心觉得自己在爱她，所以每一件伤害都能说成照顾。",
         "axes": {"MIND": 2, "PROX": 2, "SOC": 1},
         "hooks": ["DELUSION", "LAUGH", "MOTHER", "SILENCE"],
         "scene": "温柔的手、做过头的照顾、收拾干净的屋子",
@@ -350,7 +350,7 @@ TOPICS = [
     {
         "id": "SERVANT_RING",
         "name": "仆从合围",
-        "core": "动手的都是下人。主子只需要坐在那里，说一句「别弄死了」。",
+        "core": "动手的全是下人。主子坐在上首喝茶，只交代一句：别弄死。",
         "axes": {"POC": 2, "SOC": 2, "PROX": 1},
         "hooks": ["SERVANT", "WITNESS", "MECHANICAL", "SILENCE"],
         "scene": "廊下、按住四肢的手、主位上的茶",
@@ -359,7 +359,7 @@ TOPICS = [
     {
         "id": "RIVAL",
         "name": "同侪在场",
-        "core": "被比较是比被使用更难忍的。两个人都在，才是完整刑具。",
+        "core": "两个人并排跪着，一个被点中，另一个得看着，还得谢恩。",
         "axes": {"PROX": 2, "MIND": 1, "SOC": 1},
         "hooks": ["WITNESS", "TWIN", "DELUSION", "SILENCE"],
         "scene": "并排的膝、谁先出声",
@@ -368,7 +368,7 @@ TOPICS = [
     {
         "id": "HUNGER",
         "name": "饥饿",
-        "core": "胃口就是身体。饿到一定程度，什么都能吃，什么都能做。",
+        "core": "先是掺糠，然后吃牲口，最后谁先开口提那件事，谁就赢了。",
         "axes": {"BODY": 1, "SOC": 1, "POC": 1, "MIND": 1},
         "hooks": ["DINNER", "BEAST", "TIME", "SELF"],
         "scene": "空锅、啃过的骨头、数着的日子",
@@ -377,7 +377,7 @@ TOPICS = [
     {
         "id": "PLAGUE",
         "name": "疫病",
-        "core": "秩序先于人体崩坏。腐烂是慢的，慢得足够发生很多事。",
+        "core": "城门封了，医生跑了，尸体堆在巷子里没人收。烂是从人身上开始的。",
         "axes": {"DEATH": 1, "SOC": 2, "BODY": 1, "MIND": 1},
         "hooks": ["TIME", "ROT", "CORPSE_WET", "MECHANICAL", "COLD"],
         "scene": "封条、石灰、来不及埋的人",
@@ -386,7 +386,7 @@ TOPICS = [
     {
         "id": "MOTHER_DAUGHTER",
         "name": "母女",
-        "core": "爱的形式就是继承下来的暴力。她把受过的全套交给女儿。",
+        "core": "母亲把自己受过的全套，一样不落地教给女儿，还说这是为她好。",
         "axes": {"PROX": 2, "MIND": 2, "SOC": 1},
         "hooks": ["INCEST", "MOTHER", "DELUSION", "SILENCE"],
         "scene": "梳头、束胸、教她怎么忍",
@@ -395,7 +395,7 @@ TOPICS = [
     {
         "id": "FATHER_SON",
         "name": "父子",
-        "core": "继承、阉割与取代。最像自己的人，必须被自己先动一次手。",
+        "core": "最像自己的那个，得由自己先动一次手。这是继承的规矩。",
         "axes": {"PROX": 2, "POC": 1, "MIND": 1, "BODY": 1},
         "hooks": ["INCEST", "AMPUTATE", "DELUSION", "WITNESS"],
         "scene": "祠堂、家法、递过来的刀",
@@ -404,7 +404,7 @@ TOPICS = [
     {
         "id": "MARRIAGE_BED",
         "name": "婚床",
-        "core": "合法的地方最没有退路。所有的礼貌都只是慢一点。",
+        "core": "红帐、喜烛、合卺酒，全套吉祥话说到位，然后门从外面关上。",
         "axes": {"PROX": 2, "SOC": 1, "POC": 1, "MIND": 1},
         "hooks": ["MOTHER", "PREGNANT", "DELUSION", "WET"],
         "scene": "喜帐、合卺酒、窗外听房的人",
@@ -413,7 +413,7 @@ TOPICS = [
     {
         "id": "SILENT_SLAVE",
         "name": "彻底的沉默",
-        "core": "她不再说话。不是因为不能说，是因为说出来没有用。",
+        "core": "她不是不能说话。是说了没人接，说多了还要挨罚。",
         "axes": {"MIND": 2, "BODY": 1, "PROX": 1, "AES": 1},
         "hooks": ["SILENCE", "INCONT", "COLD", "SELF"],
         "scene": "空白的脸、按时的动作",
@@ -422,7 +422,7 @@ TOPICS = [
     {
         "id": "SELF_DESTRUCT",
         "name": "自毁",
-        "core": "她自己动的手。这一层永远比外人施暴更让人合不上眼。",
+        "core": "她自己划下去的。没人逼她，所以事后连该怪谁都找不到。",
         "axes": {"MIND": 2, "BODY": 1, "PROX": 1, "DEATH": 1},
         "hooks": ["SELF", "DISFIGURE", "SILENCE", "NEEDLE"],
         "scene": "碎瓷、掌心、半夜的盆",
@@ -431,7 +431,7 @@ TOPICS = [
     {
         "id": "BODY_HISTORY",
         "name": "身体编年",
-        "core": "用疤痕、妊娠、伤口做时间轴。身体是唯一不会说谎的记录。",
+        "core": "同一件旧衣，一年年松掉又收紧。身上的疤替她记着日子。",
         "axes": {"BODY": 2, "AES": 1, "MIND": 1, "DEATH": 1},
         "hooks": ["TIME", "WET", "MISCARRIAGE", "COLD"],
         "scene": "同一件旧衣、逐年松掉的系带",
@@ -440,7 +440,7 @@ TOPICS = [
     {
         "id": "FLUID_DIARY",
         "name": "污物与失禁",
-        "core": "羞耻的实况：控制不住的那一部分，才是最诚实的证词。",
+        "core": "忍到最后没忍住。地上那一摊比任何口供都诚实。",
         "axes": {"BODY": 2, "PROX": 2, "MIND": 1},
         "hooks": ["INCONT", "WET", "SERVANT", "SILENCE"],
         "scene": "床单、地砖缝、来不及的那一步",
@@ -449,7 +449,7 @@ TOPICS = [
     {
         "id": "DROWNING",
         "name": "溺与沉",
-        "core": "臣服是一种缺氧。下去的人不再挣扎，因为挣扎也没有用。",
+        "core": "头按进水里，数着气泡往上走。提起来那一下，她先谢他。",
         "axes": {"DEATH": 1, "BODY": 1, "MIND": 2, "PROX": 1},
         "hooks": ["STRANGLE", "WET", "SILENCE", "BEAST"],
         "scene": "水面、浴桶、按住后颈的手",
@@ -458,7 +458,7 @@ TOPICS = [
     {
         "id": "AFTERMATH",
         "name": "事后",
-        "core": "最狠的一段在门关上以后：收拾、洗手、吃饭、明天照常。",
+        "core": "人走了，水盆端来，地擦干净，第二天照常开饭。",
         "axes": {"DEATH": 2, "AES": 1, "SOC": 1, "MIND": 1},
         "hooks": ["DEFILE_BODY", "TIME", "COLD", "SILENCE"],
         "scene": "水盆、拖把、第二天的早饭",
@@ -467,7 +467,7 @@ TOPICS = [
     {
         "id": "LULLABY",
         "name": "摇篮与产声",
-        "core": "最软的东西被用最狠的方式。婴儿的哭声能给任何场景加压。",
+        "core": "摇篮就在旁边。孩子哭起来的时候，两边都得停下来听。",
         "axes": {"PROX": 2, "DEATH": 1, "BODY": 1, "SOC": 1},
         "hooks": ["INFANT", "BIRTH", "MOTHER", "WET"],
         "scene": "摇篮、奶渍、被打断的那一次",
@@ -476,7 +476,7 @@ TOPICS = [
     {
         "id": "WINTER_FAST",
         "name": "荒年",
-        "core": "资源就是身体。冬天很长，春天未必来。",
+        "core": "算着粮过冬，算到最后一天，得决定少哪一口人。",
         "axes": {"SOC": 1, "BODY": 1, "POC": 1, "MIND": 1},
         "hooks": ["DINNER", "TIME", "BEAST", "SELF"],
         "scene": "雪、空仓、烧掉的家具",
@@ -485,7 +485,7 @@ TOPICS = [
     {
         "id": "VORE",
         "name": "整吞",
-        "core": "一个人被完整地吞进去，还活着。消化是接下来几天的事。",
+        "core": "整个人被吞进去，还活着。之后几天的事发生在里面。",
         "axes": {"BODY": 2, "DEATH": 1, "MIND": 1, "POC": 1},
         "hooks": ["VORE", "DINNER", "BEAST", "SILENCE"],
         "scene": "喉咙、胃袋、被撑起的轮廓",
@@ -494,7 +494,7 @@ TOPICS = [
     {
         "id": "UNBIRTH",
         "name": "归胎",
-        "core": "被塞回子宫，重做一次未出生的东西。出口就是入口。",
+        "core": "往外推的方向反过来了，人被塞回去，得重新做一遍未出生的东西。",
         "axes": {"BODY": 2, "MIND": 2, "PROX": 1},
         "hooks": ["UNBIRTH", "VORE", "MOTHER", "SILENCE"],
         "scene": "产道、暗处、被合拢的腿",
@@ -503,7 +503,7 @@ TOPICS = [
     {
         "id": "INFLATION",
         "name": "膨胀",
-        "core": "往身体里灌，直到它不再像身体。破裂是可预期的终点。",
+        "core": "往里灌，量着刻度加。皮肤先发亮，然后是会不会破的问题。",
         "axes": {"BODY": 2, "POC": 1, "PROX": 1},
         "hooks": ["INFLATE", "WET", "MECHANICAL", "BIRTH"],
         "scene": "皮下的纹路、灌口、量尺",
@@ -512,7 +512,7 @@ TOPICS = [
     {
         "id": "REMODEL",
         "name": "改造",
-        "core": "身体被重新设计成另一个用途。原来的功能是错的。",
+        "core": "照图纸改，器官挪位，接口一个个装上。原来的用法被判定为错的。",
         "axes": {"BODY": 2, "MIND": 2, "POC": 1},
         "hooks": ["REMODEL", "MEDICAL", "MECHANICAL", "OBJECT"],
         "scene": "图纸、缝合线、被标出的接口",
@@ -521,7 +521,7 @@ TOPICS = [
     {
         "id": "OBJECTIFY",
         "name": "物化",
-        "core": "她是一件家具。这个说法不是比喻，是使用说明。",
+        "core": "她被摆在那儿当一件家具用，说明书上只写了承重和朝向。",
         "axes": {"MIND": 2, "POC": 2, "PROX": 1},
         "hooks": ["OBJECT", "DOLL", "SERVANT", "SILENCE"],
         "scene": "椅背、脚凳、被擦干净的表面",
@@ -530,7 +530,7 @@ TOPICS = [
     {
         "id": "MEATHOOK",
         "name": "肉钩",
-        "core": "用钩子把人挂起来，然后像处理牲口一样处理。重量全落在皮肉上。",
+        "core": "钩子从肩背穿过去，人离了地，剩下的活儿才好做。",
         "axes": {"BODY": 2, "DEATH": 1, "POC": 1, "SOC": 1},
         "hooks": ["HOOKPULL", "WOUND_SEX", "AMPUTATE", "WITNESS"],
         "scene": "冷库、铁钩、离地的脚",
@@ -539,7 +539,7 @@ TOPICS = [
     {
         "id": "BRANDING",
         "name": "烙印",
-        "core": "在皮肤上留下归属的证明。烧进去的字，一辈子洗不掉。",
+        "core": "烧红的铁按上去，留下一个名字或一个编号。这道疤一辈子洗不掉了。",
         "axes": {"PROX": 2, "BODY": 1, "POC": 1, "MIND": 1},
         "hooks": ["BRAND", "BURN", "DISFIGURE", "SERVANT"],
         "scene": "烧红的铁、压住肩的手、焦味",
@@ -548,7 +548,7 @@ TOPICS = [
     {
         "id": "DENTAL",
         "name": "齿与口",
-        "core": "嘴是唯一能咬人的器官。所以先处理牙。",
+        "core": "先撑开嘴，再一颗颗取下来。她以后说话会漏风，咬不动东西。",
         "axes": {"BODY": 2, "PROX": 2, "POC": 1},
         "hooks": ["TOOTH", "MEDICAL", "SILENCE", "NEEDLE"],
         "scene": "开口器、钳子、托盘里的白",
@@ -557,7 +557,7 @@ TOPICS = [
     {
         "id": "WOUND",
         "name": "伤口",
-        "core": "伤口不是意外，是入口。它比任何孔洞都更属于你。",
+        "core": "伤口不缝，留着当入口用。那里从此比任何地方都更属于他。",
         "axes": {"BODY": 2, "PROX": 2, "DEATH": 1},
         "hooks": ["WOUND_SEX", "AMPUTATE", "MEDICAL", "WET"],
         "scene": "敞开的创面、渗出的边、手指",
@@ -566,7 +566,7 @@ TOPICS = [
     {
         "id": "TAXIDERMY",
         "name": "剥制",
-        "core": "把一个人做成标本，姿势由制作者决定。她会一直保持这个姿势。",
+        "core": "剥开、撑架、填充、装眼。姿势由做的人决定，定下来就不再变。",
         "axes": {"DEATH": 2, "BODY": 2, "AES": 1, "MIND": 1},
         "hooks": ["TAXIDERM", "ROT", "OBJECT", "DOLL"],
         "scene": "支架、玻璃眼、填充的棉",
@@ -575,7 +575,7 @@ TOPICS = [
     {
         "id": "SENSORY",
         "name": "感官剥夺",
-        "core": "先拿走眼睛，再拿走耳朵。剩下的人只能靠皮肤活着。",
+        "core": "先蒙眼，再塞耳。剩下的时间里她只能靠皮肤判断出了什么事。",
         "axes": {"MIND": 2, "BODY": 1, "PROX": 1},
         "hooks": ["DEPRIVE", "SILENCE", "MECHANICAL", "EYE"],
         "scene": "眼罩、耳塞、被绑住的手",
@@ -584,7 +584,7 @@ TOPICS = [
     {
         "id": "IMMOLATION",
         "name": "火",
-        "core": "烧是唯一会自己继续下去的伤害。你点着以后就可以走开。",
+        "core": "浇上油，点着，然后退开看。火会替他把剩下的做完。",
         "axes": {"BODY": 2, "DEATH": 2, "SOC": 1},
         "hooks": ["BURN", "DISFIGURE", "WITNESS", "SACRIFICE"],
         "scene": "油、火把、焦黑的边",
@@ -593,7 +593,7 @@ TOPICS = [
     {
         "id": "CRUSHING",
         "name": "碾压",
-        "core": "不是切割，是压。骨头先断，形状随后改变。",
+        "core": "放进去，压下去。骨头先断，声音比形状先变。",
         "axes": {"BODY": 2, "DEATH": 1, "POC": 1},
         "hooks": ["CRUSH", "MECHANICAL", "WITNESS", "BEAST"],
         "scene": "石碾、车轮、脚下的地",
@@ -602,7 +602,7 @@ TOPICS = [
     {
         "id": "PARASITISM",
         "name": "寄生",
-        "core": "身体里住进了别的东西。它需要她活着，但只需要她活着。",
+        "core": "里头住进了别的东西。它要她活着，但也只需要她活着。",
         "axes": {"BODY": 2, "MIND": 2, "PROX": 1},
         "hooks": ["PARASITE", "INSECT", "BIRTH", "SILENCE"],
         "scene": "皮下走动的线、鼓起的腹、吐出",
@@ -611,7 +611,7 @@ TOPICS = [
     {
         "id": "MIND_BREAK",
         "name": "心智崩坏",
-        "core": "不打身体，打里面那根轴。崩了以后她会笑着说谢谢。",
+        "core": "不打身上，只拆里头那根轴。拆到某一天，她会笑着道谢。",
         "axes": {"MIND": 2, "PROX": 2, "POC": 1},
         "hooks": ["MIND_BREAK", "DELUSION", "SILENCE", "DOLL"],
         "scene": "重复的问话、被拿走的睡眠、空掉的眼睛",
@@ -620,7 +620,7 @@ TOPICS = [
     {
         "id": "PUPPET",
         "name": "人偶",
-        "core": "关节被换掉，动作由别人给。她还在里面，只是不再指挥。",
+        "core": "关节换成别人的，动作由绳子给。她清楚是自己抬的手，可这个决定不是她下的。",
         "axes": {"MIND": 2, "BODY": 1, "POC": 2},
         "hooks": ["DOLL", "OBJECT", "REMODEL", "MECHANICAL"],
         "scene": "绳、关节、被摆好的坐姿",
@@ -629,7 +629,7 @@ TOPICS = [
     {
         "id": "BLUNT_TRAUMA",
         "name": "钝击",
-        "core": "没有破口，没有血。打进去的东西在皮下继续坏。",
+        "core": "没破皮，也没出血。三天以后人才不行，那时已经找不到是谁打的。",
         "axes": {"BODY": 2, "POC": 1, "PROX": 1},
         "hooks": ["BLUNT", "CRUSH", "WITNESS", "MEDICAL"],
         "scene": "拳、靴底、腹部那块正在变色的皮肤",
@@ -638,7 +638,7 @@ TOPICS = [
     {
         "id": "FLAYING",
         "name": "剥皮",
-        "core": "皮是器官，不是包装。取下来以后人还活着，只是不能再被碰。",
+        "core": "皮是器官，不是包装。揭下来以后人还活着，只是从此怕风。",
         "axes": {"BODY": 2, "DEATH": 1, "PROX": 1, "SOC": 1},
         "hooks": ["FLAY", "AMPUTATE", "MEDICAL", "WITNESS"],
         "scene": "钩子、刀锋走向、翻起来的那一层",
@@ -647,7 +647,7 @@ TOPICS = [
     {
         "id": "IMPALEMENT",
         "name": "贯穿",
-        "core": "东西留在里面，从另一头出来。她从此被固定在某个位置。",
+        "core": "东西留在里头，从另一头出来。她得自己撑着，撑不住就撕得更开。",
         "axes": {"BODY": 2, "DEATH": 1, "POC": 1, "SOC": 1},
         "hooks": ["IMPALE", "HOOKPULL", "WITNESS", "MECHANICAL"],
         "scene": "木桩、铁杆、被钉住的影子",
@@ -656,7 +656,7 @@ TOPICS = [
     {
         "id": "BURIAL",
         "name": "活埋与幽闭",
-        "core": "刑具是空间本身。她动不了，也不知道外面过了多久。",
+        "core": "盖子合上，人就走了。剩下的事由土和空气替她数。",
         "axes": {"DEATH": 2, "MIND": 2, "BODY": 1},
         "hooks": ["BURY", "DEPRIVE", "SILENCE", "STRANGLE"],
         "scene": "土、箱壁、越来越少的空气",
@@ -665,7 +665,7 @@ TOPICS = [
     {
         "id": "FREEZING",
         "name": "冻",
-        "core": "低温不制造伤口，它只是让一切慢下来，然后停下。",
+        "core": "不制造伤口，只是让一切慢下来，然后停。最后那阵暖意是最坏的信号。",
         "axes": {"BODY": 2, "DEATH": 2, "MIND": 1},
         "hooks": ["FREEZE", "AMPUTATE", "TIME", "SILENCE"],
         "scene": "霜、发黑的指尖、开始不觉得冷的那一刻",
@@ -674,7 +674,7 @@ TOPICS = [
     {
         "id": "DEFORMITY",
         "name": "畸形",
-        "core": "没有凶手。身体自己长成了不该长的样子，而这就是全部。",
+        "core": "没有凶手。身体一生下来就是这样，而这就是全部理由。",
         "axes": {"BODY": 2, "SOC": 1, "MIND": 1, "AES": 1},
         "hooks": ["DEFORM", "MEDICAL", "OBJECT", "WITNESS"],
         "scene": "标本罐、幕布、不敢看的接生婆",
@@ -692,7 +692,7 @@ TOPICS = [
     {
         "id": "VOMITING",
         "name": "呕吐",
-        "core": "反向的排出。身体拒绝接受，而拒绝的样子本身被拿去用了。",
+        "core": "身体在拒绝，可拒绝的姿势本身被拿去用了，所以拒绝也没用。",
         "axes": {"BODY": 2, "PROX": 2, "MIND": 1},
         "hooks": ["VOMIT", "THROAT", "INCONT", "SILENCE"],
         "scene": "喉咙的痉挛、地上的那摊、被按回去的头",
@@ -701,7 +701,7 @@ TOPICS = [
     {
         "id": "NAIL_BED",
         "name": "指甲",
-        "core": "最小的面积，最密的神经。取下来以后她连握都握不住。",
+        "core": "十片指甲取下来，放在一边。她之后连握拳都握不上。",
         "axes": {"BODY": 2, "PROX": 1},
         "hooks": ["NAIL", "NEEDLE", "MEDICAL", "SILENCE"],
         "scene": "指尖、钳口、地上的十片",
@@ -710,7 +710,7 @@ TOPICS = [
     {
         "id": "DILATION",
         "name": "过度扩张",
-        "core": "孔洞被撑到解剖学的极限之外，然后继续。",
+        "core": "一直加，加到解剖书上的极限之外，再加。那里从此合不回去。",
         "axes": {"BODY": 2, "PROX": 2, "POC": 1},
         "hooks": ["DILATE", "WOUND_SEX", "MEDICAL", "WET"],
         "scene": "拳、器械、被撑到发白的边缘",
@@ -719,7 +719,7 @@ TOPICS = [
     {
         "id": "THROAT",
         "name": "深喉与食道",
-        "core": "喉咙是一条管子。它被当成管子用的时候，呼吸是别人的。",
+        "core": "喉咙被当成管子用。这口气什么时候给，由对方说了算。",
         "axes": {"BODY": 2, "POC": 2, "PROX": 1},
         "hooks": ["THROAT", "STRANGLE", "VOMIT", "INCONT"],
         "scene": "颈部的凸起、不行了的手势、被按住的后脑",
@@ -728,7 +728,7 @@ TOPICS = [
     {
         "id": "ANESTHESIA",
         "name": "麻醉",
-        "core": "全程清醒，只是感觉不到。她看着自己被打开。",
+        "core": "全程清醒，感觉不到。她看着自己被打开，身体一声不吭。",
         "axes": {"MIND": 2, "BODY": 2, "AES": 1},
         "hooks": ["ANESTH", "MEDICAL", "AMPUTATE", "DEPRIVE"],
         "scene": "无影灯、说不出口的嘴、自己抬不起来的手",
