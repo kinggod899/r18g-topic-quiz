@@ -150,6 +150,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .vetoed b{color:var(--dim);font-weight:400}
 .acts{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
 
+/* ---------- 截图按钮反馈 ---------- */
+#btnShot.busy{opacity:.55;pointer-events:none}
+
 /* ---------- 全谱 ---------- */
 .atlas{padding-top:38px}
 .atlas input{
@@ -479,6 +482,7 @@ function result(app) {
   const hi = Math.max(...rows.map(r => r.s));
 
   const w = el("div", "res");
+  w.id = "resultShot";
   w.innerHTML = `<h2 class="serif">你的坐标</h2>
     <div class="sub">按这套坐标，${D.topics.length} 个题材重排如下。点任意一行展开名词解释。</div>`;
 
@@ -585,13 +589,16 @@ function result(app) {
   }
 
   const acts = el("div", "acts");
+  const b0 = el("button", "btn", "保存为图片");
+  b0.id = "btnShot";
+  b0.onclick = () => shotResult(b0);
   const b1 = el("button", "btn ghost", "重新作答");
   b1.onclick = reset;
   const b2 = el("button", "btn ghost", "复制结果");
   b2.onclick = () => copyResult(rows, top, best, rec, b2);
   const b3 = el("button", "btn ghost", "看全部题材");
   b3.onclick = () => go("atlas");
-  acts.append(b1, b2, b3);
+  acts.append(b0, b1, b2, b3);
   w.appendChild(acts);
 
   app.appendChild(w);
@@ -652,6 +659,135 @@ function fallbackCopy(txt, done) {
   document.body.appendChild(ta); ta.select();
   try { document.execCommand("copy"); done(); } catch (e) {}
   document.body.removeChild(ta);
+}
+
+/* ---------------- 结果截图（手工 canvas 绘制，file:// 下不污染画布） ---------------- */
+
+const SHOT = (() => {
+  const PAD = 28, SCALE = 2;
+  const cvs = document.createElement("canvas");
+  const ctx = cvs.getContext("2d");
+
+  function parseColor(c) {
+    if (!c || c === "transparent") return null;
+    const m = c.match(/[\d.]+/g);
+    if (!m || m.length < 3) return null;
+    const a = m.length > 3 ? parseFloat(m[3]) : 1;
+    if (a <= 0) return null;
+    return `rgba(${m[0] | 0},${m[1] | 0},${m[2] | 0},${a})`;
+  }
+
+  function wrapText(str, maxW) {
+    const lines = [];
+    let cur = "";
+    for (const ch of str) {
+      const t = cur + ch;
+      if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = ch; }
+      else cur = t;
+    }
+    if (cur) lines.push(cur);
+    return lines.length ? lines : [""];
+  }
+
+  function paint(node, ox, oy) {
+    const cs = getComputedStyle(node);
+    if (cs.display === "none" || cs.visibility === "hidden" || parseFloat(cs.opacity) === 0) return;
+    if (node.classList && node.classList.contains("acts")) return;
+    const r = node.getBoundingClientRect();
+    const x = r.left - ox, y = r.top - oy, w = r.width, h = r.height;
+    if (w <= 0 || h <= 0) return;
+
+    const pl = parseFloat(cs.paddingLeft) || 0;
+    const pt = parseFloat(cs.paddingTop) || 0;
+    const pr = parseFloat(cs.paddingRight) || 0;
+
+    // 进度条 <i>：红到金的渐变实心
+    const isBar = node.tagName === "I" && node.parentElement && node.parentElement.classList.contains("rbar");
+    if (isBar) {
+      const g = ctx.createLinearGradient(x, 0, x + w, 0);
+      g.addColorStop(0, "#b8432e"); g.addColorStop(1, "#c9a765");
+      ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    } else {
+      const bg = parseColor(cs.backgroundColor);
+      if (bg) { ctx.fillStyle = bg; ctx.fillRect(x, y, w, h); }
+      const bw = parseFloat(cs.borderTopWidth) || 0;
+      if (bw > 0) {
+        const bc = parseColor(cs.borderTopColor);
+        if (bc) {
+          ctx.fillStyle = bc;
+          ctx.fillRect(x, y, w, bw);
+          ctx.fillRect(x, y + h - bw, w, bw);
+          const bl = parseFloat(cs.borderLeftWidth) || bw;
+          const br = parseFloat(cs.borderRightWidth) || bw;
+          ctx.fillRect(x, y, bl, h);
+          ctx.fillRect(x + w - br, y, br, h);
+        }
+      }
+    }
+
+    // 该元素的直接文本节点
+    let own = "";
+    for (const c of node.childNodes) if (c.nodeType === 3) own += c.nodeValue;
+    own = own.replace(/\s+/g, " ").trim();
+    if (own && node.parentElement && node.parentElement.classList.contains("todo")) own = "□　" + own;
+    if (own) {
+      const fs = parseFloat(cs.fontSize) || 14;
+      const lh = parseFloat(cs.lineHeight) || fs * 1.6;
+      ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${fs}px ${cs.fontFamily}`;
+      const fg = parseColor(cs.color);
+      ctx.fillStyle = fg || "#e9e3d9";
+      ctx.textBaseline = "top";
+      ctx.textAlign = "left";
+      const lines = wrapText(own, Math.max(12, w - pl - pr));
+      const ty = y + pt + (lh - fs) / 2;
+      lines.forEach((ln, i) => ctx.fillText(ln, x + pl, ty + i * lh));
+    }
+
+    for (const kid of node.children) paint(kid, ox, oy);
+  }
+
+  function capture(root) {
+    const r = root.getBoundingClientRect();
+    const w = Math.ceil(r.width) + PAD * 2;
+    const h = Math.ceil(r.height) + PAD * 2;
+    cvs.width = w * SCALE;
+    cvs.height = h * SCALE;
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
+    ctx.fillStyle = "#0b0a0d";
+    ctx.fillRect(0, 0, w, h);
+    ctx.save();
+    ctx.translate(PAD - r.left, PAD - r.top);
+    paint(root, 0, 0);
+    ctx.restore();
+    return cvs.toDataURL("image/png");
+  }
+
+  function download(dataUrl) {
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = "R18G选题结果_" + new Date().toISOString().slice(0, 10) + ".png";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+
+  return { capture, download };
+})();
+
+function shotResult(btn) {
+  const root = document.getElementById("resultShot");
+  if (!root) return;
+  const old = btn.textContent;
+  btn.textContent = "生成中…";
+  btn.classList.add("busy");
+  setTimeout(() => {
+    try {
+      SHOT.download(SHOT.capture(root));
+      btn.textContent = "已保存";
+    } catch (e) {
+      console.error("[shot]", e);
+      btn.textContent = "保存失败";
+    }
+    setTimeout(() => { btn.textContent = old; btn.classList.remove("busy"); }, 1600);
+  }, 30);
 }
 
 /* ---------------- 全谱 ---------------- */
