@@ -48,13 +48,17 @@ def build_data():
         "topics": topics,
         "taboos": [{"k": a, "n": b, "hooks": c} for a, b, c in q.TABOOS],
         "softTaboos": [{"k": a, "n": b, "axis": c} for a, b, c in q.SOFT_TABOOS],
-        "scenes": q.SCENES,
-        "relations": q.RELATIONS,
-        "povs": q.POVS,
-        "tones": q.TONES,
-        "lengths": q.LENGTHS,
-        "shape": ["一次到底（单场景，冲到最高再停）", "长期日常（同样的伤口重复发生很多次）"],
-        "ending": ["死（死是那一声钝响）", "活（活下来才是更长的刑）", "随便，看情节走到哪"],
+        "orientations": [{"k": k, "n": n, "search": s} for k, n, s in q.ORIENTATIONS],
+        "mediaOptions": q.MEDIA_OPTIONS,
+        "mediaKeys": q.MEDIA_KEYS,
+        "lengthOptions": q.LENGTH_OPTIONS,
+        "lengthKeys": q.LENGTH_KEYS,
+        "langOptions": q.LANG_OPTIONS,
+        "hookTags": q.HOOK_TAGS,
+        "defaultTaboo": "ORIENT_FEMDOM",
+        "tagIndex": RECO.tag_index(),
+        "tagAliases": RECO.aliases(),
+        "recoBuckets": RECO.buckets(),
     }
 
 
@@ -202,6 +206,25 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .todo li::before{content:"□";position:absolute;left:0;color:var(--dim2)}
 .vetoed{font-size:12.5px;color:var(--dim2);line-height:2}
 .vetoed b{color:var(--dim);font-weight:400}
+
+/* ---- 阅读推荐结果页：作品清单 ---- */
+.mediaSec{margin-bottom:34px}
+.mediaTitle{font-size:17px;color:var(--ink);margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line);font-weight:400}
+.mediaTitle span{font-size:12px;color:var(--gold);margin-left:6px}
+.workCard{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:14px 18px;margin-bottom:10px}
+.workCard .wt{font-size:14px;color:var(--ink);margin-bottom:3px}
+.workCard .wt a{color:var(--gold);text-decoration:none}
+.workCard .wt a:hover{text-decoration:underline}
+.workCard .wm{font-size:11px;color:var(--dim2);letter-spacing:.04em}
+.workCard .whit{font-size:11px;color:var(--red2);margin-top:6px;letter-spacing:.06em}
+.workCard .wn{font-size:12.5px;color:var(--dim);line-height:1.75;margin-top:5px}
+.workCard .wsearch{font-size:11px;color:var(--dim2);margin-top:6px;font-family:monospace;word-break:break-all}
+.searchline{font-size:12.5px;color:var(--dim);line-height:2.2}
+.searchline code{color:var(--gold);font-size:12px;word-break:break-all}
+input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:2px;color:var(--ink);padding:11px 13px;font-size:13px;font-family:inherit;margin:6px 0 2px;outline:none}
+input:focus{border-color:var(--gold)}
+input::placeholder{color:var(--dim2)}
+
 .acts{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
 
 /* ---------- 截图按钮反馈 ---------- */
@@ -241,9 +264,9 @@ const el = (t, c, h) => { const e = document.createElement(t); if(c) e.className
 
 const S = {
   step: 0,
-  main: [], soft: [], hooks: [], taboos: [], softTaboos: [],
-  scene: null, relation: null, pov: null, tone: null, length: null,
-  shape: null, ending: null
+  main: [], soft: [], hooks: [], softTaboos: [],
+  media: [], length: null, language: null,
+  taboos: [D.defaultTaboo]
 };
 
 const AX = {}; D.axes.forEach(a => AX[a.k] = a.n);
@@ -280,24 +303,22 @@ function renderStep() {
   app.innerHTML = "";
 
   if (S.step === 0) return cover(app);
-  if (S.step === 5) return result(app);
+  if (S.step === 4) return result(app);
 
   const head = el("div", "stephead");
-  head.appendChild(el("span", "steptag", ["", "第一轮 / 四", "第二轮 / 四", "第三轮 / 四", "第四轮 / 四"][S.step]));
-  head.appendChild(el("h2", "", ["", "你被什么击中", "划掉不吃的东西", "成品配方", "定盘"][S.step]));
+  head.appendChild(el("span", "steptag", ["", "第一轮 / 三", "第二轮 / 三", "第三轮 / 三"][S.step]));
+  head.appendChild(el("h2", "", ["", "你被什么击中", "划掉不吃的东西", "怎么读"][S.step]));
   app.appendChild(head);
   app.appendChild(el("div", "stepdesc", [
     "",
     "先说你在哪几处被击中。选两根最狠的，再挑几个具体画面，剩下的交给程序去算。",
     "把不能碰的先划掉。硬禁区一踩就整类作废，软偏好只让它往后排。",
-    "同一个题材，放在宫廷和放在都市，写出来是两篇东西。这一轮定形状。",
-    "最后两件：这一篇要多长一口气，结尾能不能死人。"
+    "最后定怎么取用：翻哪几类、多大块、什么语言。"
   ][S.step]));
 
   if (S.step === 1) step1(app);
   if (S.step === 2) step2(app);
   if (S.step === 3) step3(app);
-  if (S.step === 4) step4(app);
 
   app.appendChild(navBar());
 }
@@ -305,18 +326,18 @@ function renderStep() {
 function cover(app) {
   const c = el("div", "step cover");
   c.innerHTML = `
-    <div class="kicker">R18G 题材定位</div>
-    <h1 class="serif">先量出你的<em>坐标</em>，<br>再谈写什么。</h1>
+    <div class="kicker">R18G 阅读推荐</div>
+    <h1 class="serif">先量出你的<em>坐标</em>，<br>再找作品。</h1>
     <p class="lead">
       直接问「你喜欢哪个题材」，答出来的多半不是真的。人会挑自己觉得拿得出手的那些，
       把真正让自己坐不住的藏起来。所以这里换个问法：你在哪几处被击中，哪些碰都不能碰。
-      十二道题，四轮。答完以后，68 个题材按你的坐标重新排一遍。
+      十道题，三轮。答完以后，按坐标重排题材，并给出漫画 / 小说 / 电影三类作品清单。
     </p>
     <div class="meta">
       <div><b>${D.topics.length}</b>题材</div>
       <div><b>${D.hooks.length}</b>钩子</div>
       <div><b>${D.axes.length}</b>轴</div>
-      <div><b>12</b>题 / 约 2 分钟</div>
+      <div><b>10</b>题 / 约 2 分钟</div>
     </div>
     <div class="startrow">
       <button class="btn" id="btnStart">开始</button>
@@ -324,7 +345,7 @@ function cover(app) {
     </div>
     <p class="note" style="margin-top:26px">
       全部内容留在本机浏览器里，不上传、不保存。关掉页面即清空。<br>
-      所有角色与情节均为虚构，用于创作前的选题定位。
+      作品清单按标签匹配，力求方向大致对味，不保证逐条精准。女性向作品默认排除，可在禁区题取消。
     </p>`;
   app.appendChild(c);
   document.getElementById("btnStart").addEventListener("click", () => go(1));
@@ -393,7 +414,7 @@ function step1(app) {
 
 function step2(app) {
   const q4 = qBlock("04", "硬禁区 —— 踩中就整类作废（可多选，可空）",
-    "这条的权重是偏好项的三倍半。宁可少推一个，也别推一个你读到一半就想关掉的东西。");
+    "女性向作品已默认排除。这条权重是偏好项的三倍半；想看女性向，点掉它即可。");
   const o4 = el("div", "opts grid2");
   D.taboos.forEach((t, i) => {
     o4.appendChild(optRow(i + 1, t.n, null, S.taboos.includes(t.k), () => {
@@ -428,16 +449,31 @@ function singleQ(app, no, title, hint, list, key) {
 }
 
 function step3(app) {
-  singleQ(app, "06", "场景 —— 故事发生在哪", null, D.scenes, "scene");
-  singleQ(app, "07", "关系 —— 动手的与承受的是什么关系", null, D.relations, "relation");
-  singleQ(app, "08", "视角 —— 镜头放在谁身上", null, D.povs, "pov");
-  singleQ(app, "09", "笔法 —— 用哪种舌头说这件事", null, D.tones, "tone");
-  singleQ(app, "10", "长度 —— 这次要多大一块", null, D.lengths, "length");
-}
+  // Q6 载体（多选）
+  const q6 = qBlock("06", "今晚翻哪几类（<b>可多选，至少 1</b>）", "决定结果页展示哪几类清单。");
+  const o6 = el("div", "opts");
+  D.mediaOptions.forEach((v, i) => {
+    const k = D.mediaKeys[i];
+    o6.appendChild(optRow(i + 1, v, null, S.media.includes(k), () => {
+      const at = S.media.indexOf(k);
+      if (at >= 0) S.media.splice(at, 1); else S.media.push(k);
+      renderStep();
+    }));
+  });
+  q6.appendChild(o6);
+  app.appendChild(q6);
 
-function step4(app) {
-  singleQ(app, "11", "这一次，你要的是哪一种落法", "同一题材，单场景冲到顶，和日常化重复，是两篇完全不同的文。", D.shape, "shape");
-  singleQ(app, "12", "结尾允许死吗", null, D.ending, "ending");
+  // Q7 篇幅 / Q8 语言（单选）
+  function singleKey(no, title, list, key) {
+    const b = qBlock(no, title, null);
+    const o = el("div", "opts");
+    list.forEach((v, i) => o.appendChild(optRow(i + 1, v, null, S[key] === i, () => { S[key] = i; renderStep(); })));
+    b.appendChild(o);
+    app.appendChild(b);
+  }
+  singleKey("07", "想看多大一块", D.lengthOptions, "length");
+  singleKey("08", "语言范围", D.langOptions, "language");
+
 }
 
 function navBar() {
@@ -450,9 +486,9 @@ function navBar() {
     b.onclick = () => go(S.step - 1);
     n.appendChild(b);
   }
-  const nx = el("button", "btn", S.step === 4 ? "算结果" : "下一步");
+  const nx = el("button", "btn", S.step === 3 ? "出结果" : "下一步");
   nx.disabled = !ok;
-  nx.onclick = () => { if (ok) go(S.step === 4 ? 5 : S.step + 1); };
+  nx.onclick = () => { if (ok) go(S.step === 3 ? 4 : S.step + 1); };
   n.appendChild(nx);
   return n;
 }
@@ -460,8 +496,7 @@ function navBar() {
 function canNext() {
   if (S.step === 1) return S.main.length === 2 && S.hooks.length >= 2;
   if (S.step === 2) return true;
-  if (S.step === 3) return [S.scene, S.relation, S.pov, S.tone, S.length].every(v => v !== null);
-  if (S.step === 4) return S.shape !== null && S.ending !== null;
+  if (S.step === 3) return S.media.length >= 1 && S.length !== null && S.language !== null;
   return true;
 }
 
@@ -473,12 +508,10 @@ function needText() {
     return a.length ? "还差：" + a.join("，") : "可以继续";
   }
   if (S.step === 3) {
-    const rest = [["场景", S.scene], ["关系", S.relation], ["视角", S.pov], ["笔法", S.tone], ["长度", S.length]]
-      .filter(x => x[1] === null).map(x => x[0]);
-    return rest.length ? "还差：" + rest.join("、") : "可以继续";
-  }
-  if (S.step === 4) {
-    const rest = [["落法", S.shape], ["结尾", S.ending]].filter(x => x[1] === null).map(x => x[0]);
+    const rest = [];
+    if (S.media.length < 1) rest.push("载体至少 1 类");
+    if (S.length === null) rest.push("篇幅");
+    if (S.language === null) rest.push("语言");
     return rest.length ? "还差：" + rest.join("、") : "可以继续";
   }
   return "";
@@ -526,105 +559,88 @@ function result(app) {
   const top = usable.slice(0, 8);
   const lo = Math.min(...rows.map(r => r.s));
   const hi = Math.max(...rows.map(r => r.s));
+  const reco = computeReco(top);
 
   const w = el("div", "res");
   w.id = "resultShot";
-  w.innerHTML = `<h2 class="serif">你的坐标</h2>
-    <div class="sub">按这套坐标，${D.topics.length} 个题材重排如下。点任意一行展开名词解释。</div>`;
+  w.innerHTML = `<h2 class="serif">你的阅读坐标</h2>` +
+    `<div class="sub">${D.topics.length} 个题材按坐标重排，下方按漫画 / 小说 / 电影给出作品清单。点题材行展开解释。</div>`;
 
-  // 坐标
   const co = el("div", "coords");
   const put = (k, v) => co.appendChild(el("div", "", `<dt>${k}</dt><dd>${v}</dd>`));
   put("主轴", S.main.map(k => AX[k]).join(" ／ "));
   put("副轴", S.soft.length ? S.soft.map(k => AX[k]).join(" ／ ") : "—");
   put("钩子", S.hooks.length ? S.hooks.map(k => HK[k]).join(" ／ ") : "—");
-  put("硬禁区", S.taboos.length ? S.taboos.map(k => D.taboos.find(x => x.k === k).n).join(" ／ ") : "无");
+  put("硬禁区", S.taboos.map(k => (D.taboos.find(x => x.k === k) || {}).n || k).join(" ／ ") || "无");
   put("软偏好", S.softTaboos.length ? S.softTaboos.map(k => D.softTaboos.find(x => x.k === k).n).join(" ／ ") : "无");
-  put("落法", D.shape[S.shape] + " ／ 结尾：" + D.ending[S.ending]).innerHTML;
+  put("取用", D.mediaOptions[D.mediaKeys.indexOf(S.media[0])] + " 等 ／ " +
+      D.lengthOptions[S.length] + " ／ " + D.langOptions[S.language]);
   w.appendChild(co);
 
-  if (!top.length) {
-    w.appendChild(el("div", "card", `<span style="color:var(--red2)">禁区把所有题材都划掉了。</span>
-      <div class="note" style="margin-top:8px">要么回上一步松开一条，要么这些确实不是你要的。</div>`));
-    const acts = el("div", "acts");
-    const b = el("button", "btn", "回上一步");
-    b.onclick = () => go(2);
-    acts.appendChild(b);
-    w.appendChild(acts);
-    app.appendChild(w);
-    return;
-  }
+  w.appendChild(el("h2", "serif", "作品清单")).style.marginTop = "40px";
+  w.appendChild(el("div", "sub", "按标签匹配，方向大致对味，不保证逐条精准。链接可直接打开；无链接的按检索提示查找。"));
+  let anyWork = false;
+  D.mediaKeys.forEach((mk, mi) => {
+    if (!S.media.includes(mk)) return;
+    const sec = el("div", "mediaSec");
+    const items = reco[mk] || [];
+    anyWork = anyWork || items.length > 0;
+    sec.appendChild(el("h3", "mediaTitle", `${D.mediaOptions[mi]}　<span>${items.length}</span>`));
+    if (!items.length) {
+      sec.appendChild(el("div", "note", "本类暂无条目，可按标签继续补充。"));
+    } else {
+      items.slice(0, 20).forEach(rec => {
+        const wk = rec.work;
+        const meta = [wk.author, wk.year].filter(Boolean).join(" · ");
+        const name = wk.link ? `<a href="${wk.link}" target="_blank" rel="noopener">${wk.title}</a>` : wk.title;
+        const card = el("div", "workCard");
+        card.innerHTML = `<div class="wt">${name}${wk.origin_title ? ` <span class="wot">${wk.origin_title}</span>` : ""}</div>` +
+          `${meta ? `<div class="wm">${meta}</div>` : ""}` +
+          `<div class="whit">命中：${rec.why.join(" · ")}</div>` +
+          `<div class="wn">${wk.note || ""}</div>` +
+          `${wk.link ? "" : `<div class="wsearch">检索：${esc(rec.search || wk.title)}</div>`}`;
+        sec.appendChild(card);
+      });
+      if (items.length > 20) sec.appendChild(el("div", "note", `仅显示前 20 条，共 ${items.length} 条。`));
+    }
+    w.appendChild(sec);
+  });
+  if (!anyWork) w.appendChild(el("div", "card", "作品库当前条目较少。按标签填入后，这里会自动出现对应作品。"));
 
-  // 排序
-  w.appendChild(el("h2", "serif", "题材排序")).style.marginTop = "40px";
-  w.appendChild(el("div", "sub", "分数只是相对你的坐标算出来的匹配度，不是什么绝对排名。前几名差 1.5 分以内，基本可以当并列看。"));
+  w.appendChild(el("h2", "serif", "推荐题材")).style.marginTop = "40px";
+  w.appendChild(el("div", "sub", "解释为什么推这些作品：题材按你坐标的匹配度排序。前几名差 1.5 分以内可当并列看。"));
   const list = el("div", "rank");
-
   top.forEach((r, i) => {
     const row = el("div", "row");
     const head = el("div", "rowhead");
-    head.innerHTML = `<span class="rk">${String(i + 1).padStart(2, "0")}</span>
-      <span class="rname serif">${r.t.name}</span>
-      <span class="rterm">${r.t.term}</span>
-      <span class="rscore">${r.s.toFixed(1)}</span>`;
+    head.innerHTML = `<span class="rk">${String(i + 1).padStart(2, "0")}</span>` +
+      `<span class="rname serif">${r.t.name}</span>` +
+      `<span class="rterm">${r.t.term}</span>` +
+      `<span class="rscore">${r.s.toFixed(1)}</span>`;
     const pct = hi > lo ? ((r.s - lo) / (hi - lo)) * 100 : 0;
     const bar = el("div", "rbar", `<i></i>`);
-    row.appendChild(head);
-    row.appendChild(bar);
+    row.appendChild(head); row.appendChild(bar);
     row.appendChild(el("div", "rcore", r.t.core));
     if (r.why.length) row.appendChild(el("div", "rwhy", r.why.join("；")));
-
     const exp = el("div", "exp");
-    exp.innerHTML = `
-      <div class="lab">术语</div><div class="val">${r.t.term}</div>
-      <div class="lab">来历</div><div class="val">${r.t.origin}</div>
-      <div class="lab">解释</div><div class="val txt">${r.t.explain}</div>
-      <div class="lab">原生场景</div><div class="val">${r.t.scene}</div>
-      <div class="lab">结构三拍</div><div class="val">${r.t.beat}</div>
-      ${renderWorks(r.t.works)}`;
+    exp.innerHTML = `<div class="lab">术语</div><div class="val">${r.t.term}</div>` +
+      `<div class="lab">来历</div><div class="val">${r.t.origin}</div>` +
+      `<div class="lab">解释</div><div class="val txt">${r.t.explain}</div>` +
+      `<div class="lab">题材 id</div><div class="val">TP:${r.t.id}</div>`;
     row.appendChild(exp);
-
     head.onclick = () => exp.classList.toggle("open");
     list.appendChild(row);
     setTimeout(() => { bar.firstChild.style.width = pct + "%"; }, 60 + i * 55);
   });
   w.appendChild(list);
 
-  // 定盘
-  const best = top[0].t;
-  let rec = best.hooks.filter(h => S.hooks.includes(h));
-  if (!rec.length) rec = best.hooks.slice(0, 3);
-
-  w.appendChild(el("h2", "serif", "首选定盘")).style.marginTop = "40px";
-  const pick = el("div", "card pick");
-  pick.innerHTML = `
-    <div class="lab2">OPENING SHEET</div>
-    <h3 class="serif">${best.name}</h3>
-    <div style="font-size:11.5px;color:var(--gold);margin-bottom:14px">${best.term}</div>
-    <div class="core">${best.core}</div>
-    <div class="tbl">
-      <dt>原生场景</dt><dd>${best.scene}</dd>
-      <dt>结构三拍</dt><dd>${best.beat}</dd>
-      <dt>必带钩子</dt><dd>${rec.map(h => HK[h]).join("、")}</dd>
-      <dt>配方</dt><dd>${D.scenes[S.scene]} ／ ${D.relations[S.relation]} ／ ${D.povs[S.pov]}视角 ／ ${D.tones[S.tone]} ／ ${D.lengths[S.length]}</dd>
-      <dt>落法</dt><dd>${D.shape[S.shape]}</dd>
-      <dt>结尾</dt><dd>${D.ending[S.ending]}</dd>
-    </div>
-    <div class="todo">
-      <li>先定三个具体细节，写的时候照着这个密度来，别停在形容词上</li>
-      <li>每段都要有身体上的实况，别写作者自己的评语</li>
-      <li>承受那一方要有自己的内在，不能只是个道具</li>
-      <li>结尾别给救赎，情节走到哪儿就停在哪儿</li>
-    </div>`;
-  w.appendChild(pick);
-
-  if (top.length > 1) {
-    const alt = el("div", "card");
-    alt.innerHTML = `<div class="note" style="margin-bottom:10px">次选搭子（做副线，或下一轮重跑时换这一组轴）</div>
-      <div style="font-size:14px">${top.slice(1, 4).map(r => `<span class="serif" style="font-size:16px">${r.t.name}</span>
-        <span style="color:var(--dim2);font-size:12px">　${r.t.term}</span>`).join("<br>")}</div>`;
-    w.appendChild(alt);
-  }
+  const searchBox = el("div", "card");
+  searchBox.style.marginTop = "40px";
+  searchBox.innerHTML = `<div class="lab2">检索提示 · 英文标签词，可复制到 hitomi / AO3 搜索框继续挖</div>` +
+    `<div class="searchline">漫画：<code>${esc(reco.search.manga)}</code></div>` +
+    `<div class="searchline">小说：<code>${esc(reco.search.novel)}</code></div>` +
+    `<div class="searchline">电影：<code>${esc(reco.search.film)}</code></div>`;
+  w.appendChild(searchBox);
 
   const vetoed = rows.filter(r => r.veto).slice(0, 5);
   if (vetoed.length) {
@@ -635,21 +651,57 @@ function result(app) {
   }
 
   const acts = el("div", "acts");
-  const b0 = el("button", "btn", "保存为图片");
-  b0.id = "btnShot";
-  b0.onclick = () => shotResult(b0);
-  const b1 = el("button", "btn ghost", "重新作答");
-  b1.onclick = reset;
-  const b2 = el("button", "btn ghost", "复制结果");
-  b2.onclick = () => copyResult(rows, top, best, rec, b2);
-  const b3 = el("button", "btn ghost", "看全部题材");
-  b3.onclick = () => go("atlas");
-  acts.append(b0, b1, b2, b3);
-  w.appendChild(acts);
-
+  const b0 = el("button", "btn", "保存为图片"); b0.id = "btnShot"; b0.onclick = () => shotResult(b0);
+  const b1 = el("button", "btn ghost", "重新作答"); b1.onclick = reset;
+  const b2 = el("button", "btn ghost", "复制结果"); b2.onclick = () => copyResult(rows, top, reco, b2);
+  const b3 = el("button", "btn ghost", "看全部题材"); b3.onclick = () => go("atlas");
+  acts.append(b0, b1, b2, b3); w.appendChild(acts);
   app.appendChild(w);
 }
 
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+
+function computeReco(top) {
+  const topicIds = new Set(top.map(r => "TP:" + r.t.id));
+  const main = new Set(S.main), soft = new Set(S.soft), hooks = new Set(S.hooks);
+  const tabooHooks = new Set();
+  S.taboos.forEach(k => { const t = D.taboos.find(x => x.k === k); if (t) t.hooks.forEach(h => tabooHooks.add(h)); });
+  const out = { manga: [], novel: [], film: [] };
+  const seen = {};
+  for (const tag in D.recoBuckets) {
+    const bucket = D.recoBuckets[tag];
+    for (const mk of D.mediaKeys) {
+      (bucket[mk] || []).forEach(wk => {
+        if (!S.media.includes(mk)) return;
+        if (S.taboos.includes("ORIENT_FEMDOM") && (wk.orientation || "FM") === "FEMDOM") return;
+        if ((wk.avoid || []).some(h => tabooHooks.has(h))) return;
+        if (S.language === 0 && wk.language === "ja") return;
+        let sc = 0; const why = [];
+        if (topicIds.has(tag)) { sc += 5; why.push("推荐题材"); }
+        if (tag.indexOf("AX:") === 0) { const k = tag.slice(3);
+          if (main.has(k)) { sc += 4; why.push("主轴"); }
+          else if (soft.has(k)) { sc += 2; why.push("副轴"); } }
+        if (tag.indexOf("HK:") === 0 && hooks.has(tag.slice(3))) { sc += 3; why.push("命中钩子"); }
+        if (S.language === 0 && wk.language === "zh") sc += 1;
+        if (D.lengthKeys[S.length] && wk.length === D.lengthKeys[S.length]) sc += 1;
+        const id = wk.id || wk.title;
+        const search = (D.tagIndex[tag] || {}).label || wk.title;
+        const rec = { work: wk, score: sc, why: [...new Set(why)], tags: [tag], search };
+        if (seen[id]) { seen[id].score += sc; seen[id].why = [...new Set(seen[id].why.concat(why))]; seen[id].tags.push(tag); }
+        else { seen[id] = rec; out[mk].push(rec); }
+      });
+    }
+  }
+  for (const mk of D.mediaKeys) out[mk].sort((a, b) => (b.score - a.score) || ((b.work.year || 0) - (a.work.year || 0)) || a.work.title.localeCompare(b.work.title));
+  const hookWords = S.hooks.map(h => D.hookTags[h] || HK[h]);
+  const words = hookWords.join(" ");
+  out.search = {
+    manga: ("female: " + words).replace(/\s+/g, " ").trim(),
+    novel: words,
+    film: hookWords.slice(0, 4).join(" ") || "（按上方题材术语找同类片）",
+  };
+  return out;
+}
 const TYPE_CN = { film: "电影", novel: "小说", manga: "漫画", game: "游戏", art: "画集", other: "其他" };
 
 function renderWorks(works) {
@@ -668,29 +720,37 @@ function renderWorks(works) {
   return `<div class="lab">参考作品</div><div class="val works">${items}</div>`;
 }
 
-function copyResult(rows, top, best, rec, btn) {
+function copyResult(rows, top, reco, btn) {
   const L = [];
-  L.push("# R18G 选题结果\n");
+  L.push("# R18G 阅读推荐结果\n");
   L.push("## 坐标");
   L.push("- 主轴：" + S.main.map(k => AX[k]).join(" / "));
   L.push("- 副轴：" + (S.soft.map(k => AX[k]).join(" / ") || "—"));
   L.push("- 钩子：" + (S.hooks.map(k => HK[k]).join(" / ") || "—"));
-  L.push("- 硬禁区：" + (S.taboos.map(k => D.taboos.find(x => x.k === k).n).join(" / ") || "无"));
-  L.push("- 软偏好：" + (S.softTaboos.map(k => D.softTaboos.find(x => x.k === k).n).join(" / ") || "无"));
-  L.push("\n## 排序");
-  top.forEach((r, i) => {
-    L.push(`${i + 1}. **${r.t.name}**（${r.s.toFixed(1)}）— ${r.t.term}`);
-    L.push(`   - ${r.t.core}`);
-    if (r.why.length) L.push("   - " + r.why.join("；"));
+  L.push("- 硬禁区：" + (S.taboos.map(k => (D.taboos.find(x => x.k === k) || {}).n || k).join(" / ") || "无"));
+  L.push("- 取用：" + S.media.map((m) => D.mediaOptions[D.mediaKeys.indexOf(m)]).join(" / ") +
+    " ／ " + D.lengthOptions[S.length] + " ／ " + D.langOptions[S.language]);
+  L.push("\n## 作品清单");
+  D.mediaKeys.forEach((mk, mi) => {
+    if (!S.media.includes(mk)) return;
+    L.push("\n### " + D.mediaOptions[mi]);
+    const items = reco[mk] || [];
+    if (!items.length) { L.push("_本类暂无_"); return; }
+    items.forEach(rec => {
+      const wk = rec.work;
+      const meta = [wk.author, wk.year].filter(Boolean).join(" · ");
+      L.push("- **" + wk.title + "**" + (meta ? "  " + meta : ""));
+      L.push("  - 命中：" + rec.why.join("、"));
+      L.push("  - " + (wk.note || ""));
+      if (wk.link) L.push("  - " + wk.link);
+    });
   });
-  L.push("\n## 开工单");
-  L.push("- 定盘：" + best.name);
-  L.push("- 核：" + best.core);
-  L.push("- 场景：" + best.scene);
-  L.push("- 三拍：" + best.beat);
-  L.push("- 钩子：" + rec.map(h => HK[h]).join("、"));
-  L.push(`- 配方：${D.scenes[S.scene]} ／ ${D.relations[S.relation]} ／ ${D.povs[S.pov]}视角 ／ ${D.tones[S.tone]} ／ ${D.lengths[S.length]}`);
-  L.push("- 落法：" + D.shape[S.shape] + "；结尾：" + D.ending[S.ending]);
+  L.push("\n## 推荐题材");
+  top.forEach((r, i) => L.push(`${i + 1}. **${r.t.name}**（${r.s.toFixed(1)}）— ${r.t.term}`));
+  L.push("\n## 检索提示");
+  L.push("- 漫画：" + reco.search.manga);
+  L.push("- 小说：" + reco.search.novel);
+  L.push("- 电影：" + reco.search.film);
 
   const txt = L.join("\n");
   const done = () => { const o = btn.textContent; btn.textContent = "已复制"; setTimeout(() => btn.textContent = o, 1400); };
@@ -903,17 +963,17 @@ function go(step) {
 
 function reset() {
   S.step = 0;
-  S.main = []; S.soft = []; S.hooks = []; S.taboos = []; S.softTaboos = [];
-  S.scene = S.relation = S.pov = S.tone = S.length = S.shape = S.ending = null;
+  S.main = []; S.soft = []; S.hooks = []; S.softTaboos = [];
+  S.taboos = [D.defaultTaboo];
+  S.media = []; S.length = S.language = null;
   updateBar(0);
   renderStep();
 }
 
 function updateBar(step) {
-  const pct = step <= 0 ? 0 : step >= 5 ? 100 : (step / 4) * 100;
-  $("#pbar").style.width = pct + "%";
-  document.title = "R18G 题材定位 · " + (step <= 0 ? "封面" : step >= 5 ? "结果" : "第 " + step + " 步 / 4");
-  $("#topbtn").textContent = step >= 5 ? "看全谱" : "题材全谱";
+  const pct = step <= 0 ? 0 : step >= 4 ? 100 : (step / 3) * 100;
+  document.title = "R18G 阅读推荐 · " + (step <= 0 ? "封面" : step >= 4 ? "结果" : "第 " + step + " 步 / 3");
+  $("#topbtn").textContent = step >= 4 ? "看全谱" : "题材全谱";
   $("#topbtn").onclick = () => go("atlas");
 }
 
@@ -927,13 +987,13 @@ HTML = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>R18G 题材定位问卷</title>
+<title>R18G 阅读推荐问卷</title>
 <style>__CSS__</style>
 </head>
 <body>
 <div class="top">
   <div class="topin">
-    <div class="brand"><b>R18G</b> 题材定位</div>
+    <div class="brand"><b>R18G</b> 阅读推荐</div>
     <div class="pbar"><i id="pbar"></i></div>
     <button class="tbtn" id="topbtn">题材全谱</button>
   </div>

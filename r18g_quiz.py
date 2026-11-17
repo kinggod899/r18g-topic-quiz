@@ -118,6 +118,33 @@ HOOK_GROUPS = {
 HOOK_GROUPS["身体"] = [h for h in HOOK_GROUPS["身体"] if h in HOOKS]
 HOOK_GROUPS["场域"] = [h for h in HOOK_GROUPS["场域"] if h in HOOKS] + ["WITNESS"]
 
+# 钩子的英文检索词：标签站（hitomi / AO3）用英文或罗马字标签，中文钩子名搜不到。
+# 这是参考词，不是精确标签——各站叫法有差异，仅作检索起点。
+HOOK_TAGS = {
+    "REGICIDE": "execution", "STRANGLE": "strangulation", "DEFILE_BODY": "necrophilia",
+    "INCEST": "incest", "PREGNANT": "pregnancy", "MISCARRIAGE": "miscarriage",
+    "BIRTH": "childbirth", "BEAST": "bestiality", "AMPUTATE": "amputation",
+    "EYE": "eye trauma", "INSECT": "insects", "NEEDLE": "needles",
+    "DISFIGURE": "disfigurement", "DINNER": "cannibalism", "WITNESS": "public",
+    "SERVANT": "servants", "DELUSION": "yandere", "MECHANICAL": "machinery",
+    "WET": "bodily fluids", "INCONT": "incontinence", "CORPSE_WET": "corpse fluids",
+    "INFANT": "infant", "CORPSE_BRIDE": "necrogamy", "SACRIFICE": "sacrifice",
+    "MEDICAL": "medical", "PRIEST": "priest", "MOTHER": "mother",
+    "TWIN": "twins", "SILENCE": "silence", "LAUGH": "smile",
+    "SELF": "self harm", "TIME": "aging", "ROT": "decay",
+    "COLD": "clinical", "VORE": "vore", "UNBIRTH": "unbirth",
+    "INFLATE": "inflation", "REMODEL": "body modification", "OBJECT": "objectification",
+    "HOOKPULL": "hooks", "BRAND": "branding", "TOOTH": "teeth",
+    "WOUND_SEX": "wound", "TAXIDERM": "taxidermy", "DEPRIVE": "sensory deprivation",
+    "BURN": "burns", "CRUSH": "crushing", "PARASITE": "parasite",
+    "MIND_BREAK": "mind break", "DOLL": "dollification", "BLUNT": "blunt force",
+    "FLAY": "flaying", "IMPALE": "impalement", "BURY": "burial",
+    "FREEZE": "freezing", "DEFORM": "deformity", "HEMICORP": "hemicorporectomy",
+    "VOMIT": "vomit", "NAIL": "nails", "DILATE": "dilation",
+    "THROAT": "deep throat", "ANESTH": "anesthesia",
+}
+
+
 # ---------------------------------------------------------------- 题材库
 # axes 权重范围 -2..2；hooks 用于钩子命中加分与禁忌否决。
 
@@ -752,6 +779,7 @@ TABOOS = [
     ("PUBLIC", "公开 / 被看见 / 围观", ["WITNESS", "SERVANT"]),
     ("SUBMIT", "被剥夺意志 / 催眠 / 洗脑", ["SILENCE", "SELF"]),
     ("HUMILIATE", "排泄 / 污物（不含体液）", ["INCONT"]),
+    ("ORIENT_FEMDOM", "女性向 / 男主受 / 乙女 / GB", ["__ORIENT_FEMDOM__"]),
 ]
 
 # 软禁区：不做否决，只压分。用来表达"这个我不吃，但不必因此废掉整个题材"。
@@ -760,13 +788,20 @@ SOFT_TABOOS = [
     ("NO_ROMANCE", "不要内在戏（只要外部实况与制度）", "MIND"),
 ]
 
-# ---------------------------------------------------------------- 呈现配方
+# 取向标签：作品库按取向标注；检索式生成时套用对应前缀。
+ORIENTATIONS = [
+    ("FM", "男性向 / 女主受（BG）", "female: / F/M"),
+    ("FEMDOM", "女性向 / 男主受", "femdom / 女性向"),
+    ("YURI", "百合 / GL", "female:yuri / F/F"),
+]
 
-SCENES = ["古代宫廷 / 王朝", "当代都市", "近未来 / 机构", "乡土 / 荒野", "无明确地点"]
-RELATIONS = ["血亲", "配偶 / 契约", "主仆 / 上对下", "陌生 / 捕获", "敌我", "自己与另一个自己"]
-POVS = ["施害者", "受害者", "旁观者", "双线交替"]
-TONES = ["冷叙述（档案体）", "慢镜（生理实况）", "诗性（意象稠密）", "白描（不修饰）"]
-LENGTHS = ["短篇（单场景）", "中篇（三到五幕）", "章节（长篇的一段）"]
+# ---------------------------------------------------------------- 阅读取用配方
+
+MEDIA_OPTIONS = ["漫画", "小说", "电影"]
+LENGTH_OPTIONS = ["短篇 / 单本，一次读完", "中篇 / 几万字或十几话", "长篇 / 连载或系列", "都要"]
+LANG_OPTIONS = ["只要中文", "中文优先，日文可接受", "不限"]
+MEDIA_KEYS = ["manga", "novel", "film"]
+LENGTH_KEYS = ["short", "mid", "long", ""]
 
 
 # ---------------------------------------------------------------- 交互
@@ -846,11 +881,11 @@ def menu(items_lines):
 
 def run_quiz():
     clear()
-    title("R18G 题材匹配问卷  ·  v2")
+    title("R18G 阅读推荐问卷")
     print("""
   这套问卷不问你"喜欢哪个题材"——没有人答得出来。
   它问的是：你在哪几根轴上被击中，又绝对不能碰什么。
-  答完我把 40 个题材按你的坐标重新排一遍，再给出一个能直接开写的配方。
+  答完按坐标把题材重排，再按漫画 / 小说 / 电影给出作品清单。
 
   规则：输入编号，空格或逗号分隔；q 退出。
 """)
@@ -873,44 +908,29 @@ def run_quiz():
     # ---- 第二轮：禁忌
     title("第二轮 / 两题  ·  划掉不吃的东西")
     print("\n【4】硬禁区 —— 踩中就整类作废（可多选，可空）\n")
-    menu(["%s" % t[1] for t in TABOOS])
+    fem_i = next(i for i, t in enumerate(TABOOS) if t[0] == "ORIENT_FEMDOM")
+    menu(["%s%s" % (t[1], "  ← 已默认勾选" if i == fem_i else "") for i, t in enumerate(TABOOS)])
     taboo_idx = ask_multi("\n  > 硬禁区： ", len(TABOOS), allow_empty=True)
+    taboo_idx.add(fem_i)  # 女性向默认勾选，作品层面过滤；网页端可取消
 
     print("\n【5】软偏好 —— 不吃但不必废掉整个题材，只往后压（可多选，可空）\n")
     menu(["%s" % t[1] for t in SOFT_TABOOS])
     soft_idx2 = ask_multi("\n  > 软偏好： ", len(SOFT_TABOOS), allow_empty=True)
 
-    # ---- 第三轮：配方
-    title("第三轮 / 五题  ·  成品配方")
-    print("\n【6】场景  ——  故事发生在哪\n")
-    menu(SCENES)
-    sc = ask_single("\n  > 场景： ", len(SCENES))
+    # ---- 第三轮：阅读取用
+    title("第三轮 / 三题  ·  怎么读")
+    print("\n【6】今晚翻哪几类（可多选，至少 1）\n")
+    menu(MEDIA_OPTIONS)
+    media_idx = ask_multi("\n  > 载体： ", len(MEDIA_OPTIONS), min_pick=1)
 
-    print("\n【7】关系  ——  动手的与承受的是什么关系\n")
-    menu(RELATIONS)
-    rel = ask_single("\n  > 关系： ", len(RELATIONS))
+    print("\n【7】想看多大一块\n")
+    menu(LENGTH_OPTIONS)
+    ln = ask_single("\n  > 篇幅： ", len(LENGTH_OPTIONS))
 
-    print("\n【8】视角  ——  镜头放在谁身上\n")
-    menu(POVS)
-    pov = ask_single("\n  > 视角： ", len(POVS))
+    print("\n【8】语言范围\n")
+    menu(LANG_OPTIONS)
+    lang = ask_single("\n  > 语言： ", len(LANG_OPTIONS))
 
-    print("\n【9】笔法  ——  用哪种舌头说这件事\n")
-    menu(TONES)
-    tone = ask_single("\n  > 笔法： ", len(TONES))
-
-    print("\n【10】长度  ——  这次要多大一块\n")
-    menu(LENGTHS)
-    ln = ask_single("\n  > 长度： ", len(LENGTHS))
-
-    # ---- 第四轮：定盘取舍
-    title("第四轮 / 两题  ·  定盘")
-    print("\n【11】这一次，你要的是哪一种落法\n")
-    menu(["一次到底（单场景，冲到最高再停）", "长期日常（同样的伤口重复发生很多次）"])
-    shape = ask_single("\n  > 形状： ", 2)
-
-    print("\n【12】结尾允许死吗\n")
-    menu(["死（死是那一声钝响）", "活（活下来才是更长的刑）", "随便，看情节走到哪"])
-    ending = ask_single("\n  > 结尾： ", 3)
 
     return {
         "main": [AXES[i][0] for i in main_idx],
@@ -918,13 +938,9 @@ def run_quiz():
         "hooks": [hook_list[i][0] for i in hook_idx],
         "taboos": [TABOOS[i][0] for i in taboo_idx],
         "soft_taboos": [SOFT_TABOOS[i][0] for i in soft_idx2],
-        "scene": SCENES[sc],
-        "relation": RELATIONS[rel],
-        "pov": POVS[pov],
-        "tone": TONES[tone],
-        "length": LENGTHS[ln],
-        "shape": ["一次到底", "长期日常"][shape],
-        "ending": ["死", "活", "看情节"][ending],
+        "media": [MEDIA_KEYS[i] for i in media_idx],
+        "length": LENGTH_KEYS[ln],
+        "language": lang,
     }
 
 
@@ -991,15 +1007,29 @@ def band(score, top, bottom):
     return max(0.0, min(1.0, v))
 
 
+def _reco_profile(ans, rows):
+    usable = [r for r in rows if not r["veto"]][:8]
+    profile = {
+        "media": ans.get("media") or ["manga", "novel", "film"],
+        "main": ans["main"],
+        "soft": ans["soft"],
+        "hooks": ans["hooks"],
+        "topics": [r["topic"]["id"] for r in usable],
+        "taboos": ans["taboos"],
+        "language": ans.get("language", 2),
+        "length": ans.get("length", ""),
+    }
+    return profile, usable
+
+
 def render(ans, rows):
-    usable = [r for r in rows if not r["veto"]]
-    top = usable[:8]
+    import 作品推荐 as RECO
+    profile, usable = _reco_profile(ans, rows)
     lo = min(r["score"] for r in rows)
     hi = max(r["score"] for r in rows)
-
     axname = dict((a[0], a[1]) for a in AXES)
 
-    title("匹配结果")
+    title("阅读推荐")
 
     print("\n  坐标：")
     print("    主轴  " + " / ".join(axname[a] for a in ans["main"]))
@@ -1009,105 +1039,116 @@ def render(ans, rows):
     print("    禁硬  " + (" / ".join(dict((t[0], t[1]) for t in TABOOS)[x] for x in ans["taboos"]) if ans["taboos"] else "（无）"))
     if ans.get("soft_taboos"):
         print("    禁软  " + " / ".join(dict((t[0], t[1]) for t in SOFT_TABOOS)[x] for x in ans["soft_taboos"]))
+    print("    载体  " + " / ".join(MEDIA_OPTIONS[MEDIA_KEYS.index(m)] for m in profile["media"]))
 
-    print("\n  题材排序：\n")
-    for i, r in enumerate(top, 1):
+    reco = RECO.for_profile(profile)
+    print("\n  作品清单：")
+    any_work = False
+    for m in MEDIA_KEYS:
+        if m not in profile["media"]:
+            continue
+        items = reco.get(m, [])
+        print("\n  ── %s（%d）──" % (MEDIA_OPTIONS[MEDIA_KEYS.index(m)], len(items)))
+        if not items:
+            print("    本类暂无，可按标签继续补充。")
+            continue
+        any_work = True
+        for rec in items[:8]:
+            w = rec["work"]
+            meta = " / ".join(str(x) for x in (w.get("author"), w.get("year")) if x)
+            head = "    《%s》" % w.get("title")
+            if w.get("origin_title"):
+                head += " %s" % w["origin_title"]
+            if meta:
+                head += "  " + meta
+            print(head)
+            print("      命中：" + "、".join(dict.fromkeys(rec["why"])))
+            print("      " + w.get("note", ""))
+            if w.get("link"):
+                print("      " + w["link"])
+            else:
+                print("      （无直链，按标签检索）")
+            print()
+
+    print("\n  题材排序（供解释为什么推这些作品）：\n")
+    for i, r in enumerate(usable, 1):
         t = r["topic"]
         pct = band(r["score"], lo, hi)
         bar = "#" * int(round(pct * 28))
         print("  %2d  %-12s %5.1f  %s" % (i, t["name"], r["score"], bar))
-        print("      %s" % t["core"])
         if r["reasons"]:
             print("      · " + "；".join(r["reasons"]))
-        print()
+
+    print("\n  检索提示（英文标签词，复制到 hitomi / AO3 搜索框）：")
+    words = [HOOK_TAGS.get(h, h) for h in ans["hooks"]]
+    print("    " + " ".join(words))
 
     vetoed = [r for r in rows if r["veto"]][:3]
     if vetoed:
-        print("  ── 被禁区划掉的（供你确认是否划得太狠）──")
+        print("\n  ── 被禁区划掉的 ──")
         for r in vetoed:
             why = "、".join(r["reasons"][-1:]) or "命中硬禁区"
             print("     %s（%s）" % (r["topic"]["name"], why))
-        print()
 
-    if not top:
-        print("  禁区把所有题材都划掉了。要么放松一条，要么这真不是你的场子。\n")
-        return
-
-    best = top[0]["topic"]
-    rec_hooks = [HOOKS[h] for h in best["hooks"] if h in set(ans["hooks"])] or [HOOKS[h] for h in best["hooks"][:3]]
-
-    print("  " + "=" * 60)
-    print("  首选定盘：" + best["name"])
-    print("  " + "=" * 60)
-    print("""
-  一句话核  %s
-
-  原生场景   %s
-  结构三拍   %s
-  必带钩子   %s
-  配方        %s ／ %s ／ %s视角 ／ %s ／ %s
-  规模        %s ／ 结尾%s
-""" % (best["core"], best["scene"], best["beat"],
-       "、".join(rec_hooks),
-       ans["scene"], ans["relation"], ans["pov"], ans["tone"], ans["length"],
-       ans["shape"], ans["ending"]))
-
-    if len(top) > 1:
-        print("  次选搭子（做副线或下一轮）：" + "、".join(r["topic"]["name"] for r in top[1:4]))
-
-    return best, rec_hooks
+    if not any_work:
+        print("\n  作品库当前条目很少，按标签填入后会自动出现。")
+    return len(usable)
 
 
 # ---------------------------------------------------------------- 落盘
 
-def save(ans, rows, best, rec_hooks):
-    usable = [r for r in rows if not r["veto"]][:8]
+def save(ans, rows, count):
+    import 作品推荐 as RECO
+    profile, usable = _reco_profile(ans, rows)
+    reco = RECO.for_profile(profile)
     axname = dict((a[0], a[1]) for a in AXES)
     now = datetime.datetime.now()
     path = os.path.join(BASE, "选题结果_%s.md" % now.strftime("%m%d_%H%M"))
 
     lines = []
-    lines.append("# R18G 选题结果  %s\n" % now.strftime("%Y-%m-%d %H:%M"))
+    lines.append("# R18G 阅读推荐结果  %s\n" % now.strftime("%Y-%m-%d %H:%M"))
     lines.append("## 一、坐标\n")
     lines.append("| 项 | 内容 |")
     lines.append("|---|---|")
     lines.append("| 主轴 | %s |" % " / ".join(axname[a] for a in ans["main"]))
     lines.append("| 副轴 | %s |" % (" / ".join(axname[a] for a in ans["soft"]) or "—"))
     lines.append("| 钩子 | %s |" % (" / ".join(HOOKS[h] for h in ans["hooks"]) or "—"))
-    lines.append("| 禁区 | %s |" % (" / ".join(dict((t[0], t[1]) for t in TABOOS)[x] for x in ans["taboos"]) or "无"))
+    lines.append("| 硬禁区 | %s |" % (" / ".join(dict((t[0], t[1]) for t in TABOOS)[x] for x in ans["taboos"]) or "无"))
     lines.append("| 软禁区 | %s |" % (" / ".join(dict((t[0], t[1]) for t in SOFT_TABOOS)[x] for x in ans.get("soft_taboos", [])) or "无"))
-    lines.append("| 规模 | %s |" % ans["shape"])
-    lines.append("| 结尾 | %s |" % ans["ending"])
+    lines.append("| 载体 | %s |" % " / ".join(MEDIA_OPTIONS[MEDIA_KEYS.index(m)] for m in profile["media"]))
+    lines.append("| 篇幅 | %s |" % (LENGTH_OPTIONS[LENGTH_KEYS.index(ans.get("length", ""))] if ans.get("length") else "—"))
+    lines.append("| 语言 | %s |" % LANG_OPTIONS[ans.get("language", 2)])
     lines.append("")
-    lines.append("## 二、排序\n")
+
+    lines.append("## 二、作品清单\n")
+    for m in MEDIA_KEYS:
+        if m not in profile["media"]:
+            continue
+        lines.append("### %s\n" % MEDIA_OPTIONS[MEDIA_KEYS.index(m)])
+        items = reco.get(m, [])
+        if not items:
+            lines.append("_本类暂无，可按标签补充。_\n")
+            continue
+        for rec in items:
+            w = rec["work"]
+            meta = " · ".join(str(x) for x in (w.get("author"), w.get("year")) if x)
+            head = "**《%s》**" % w.get("title")
+            if meta:
+                head += "  " + meta
+            lines.append(head)
+            lines.append("- 命中：" + "、".join(dict.fromkeys(rec["why"])))
+            lines.append("- " + w.get("note", ""))
+            if w.get("link"):
+                lines.append("- " + w["link"])
+            lines.append("")
+    lines.append("")
+
+    lines.append("## 三、推荐题材（解释层）\n")
     for i, r in enumerate(usable, 1):
-        lines.append("%d. **%s**（%.1f）" % (i, r["topic"]["name"], r["score"]))
-        lines.append("   - %s" % r["topic"]["core"])
+        lines.append("%d. **%s**（%.1f）— %s" % (i, r["topic"]["name"], r["score"], r["topic"].get("term", "")))
         if r["reasons"]:
             lines.append("   - " + "；".join(r["reasons"]))
     lines.append("")
-
-    if best:
-        lines.append("## 三、开工单\n")
-        lines.append("- 定盘题材：**%s**" % best["name"])
-        lines.append("- 一句话核：%s" % best["core"])
-        lines.append("- 原生场景：%s" % best["scene"])
-        lines.append("- 结构三拍：%s" % best["beat"])
-        lines.append("- 必带钩子：%s" % "、".join(rec_hooks))
-        lines.append("- 配方：%s ／ %s ／ %s视角 ／ %s ／ %s" % (
-            ans["scene"], ans["relation"], ans["pov"], ans["tone"], ans["length"]))
-        lines.append("- 规模：%s" % ans["shape"])
-        lines.append("- 结尾：%s" % ans["ending"])
-        lines.append("")
-        lines.append("### 三个必须写到的细节（照这个密度写，不许抽象）")
-        lines.append("1. ")
-        lines.append("2. ")
-        lines.append("3. ")
-        lines.append("")
-        lines.append("### 本单自检")
-        lines.append("- [ ] 每一段都有身体实况，没有一句是作者在评价")
-        lines.append("- [ ] 承受者有自己的内在，不只是道具")
-        lines.append("- [ ] 结尾没有救赎，情节自己耗尽")
 
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
@@ -1155,14 +1196,12 @@ def main():
 
     ans = run_quiz()
     rows = score(ans)
-    out = render(ans, rows)
-    best, rec_hooks = (out if out else (None, []))
+    count = render(ans, rows)
 
     title("已落盘")
     print("  题库自检：%d 题材 / %d 钩子 / %d 轴" % (len(TOPICS), len(HOOKS), len(AXES)))
-    if best:
-        p = save(ans, rows, best, rec_hooks)
-        print("  结果：%s" % p)
+    p = save(ans, rows, count)
+    print("  结果：%s" % p)
     print()
 
 
