@@ -135,7 +135,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .work .wot{font-size:11.5px;color:var(--dim2);margin-left:4px}
 .work .wm{font-size:11px;color:var(--dim2);letter-spacing:.04em}
 .work .wn{font-size:12.5px;color:var(--dim);line-height:1.75;margin-top:3px}
-.aitem-works{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.aworksToggle{font-size:11.5px;letter-spacing:.12em;color:var(--red2);cursor:pointer;user-select:none;padding:10px 0 2px;margin-top:8px;border-top:1px solid var(--line)}
+.aworksToggle:hover{color:var(--gold)}
+.aworksToggle .caret{font-size:10px;display:inline-block;margin-right:4px;transition:transform .2s ease}
+.aworksToggle.collapsed .caret{transform:rotate(-90deg)}
+.aitem-works{display:none;flex-direction:column;gap:8px;margin-top:8px}
+.aitem-works.open{display:flex}
 .pick{border:1px solid var(--red);background:linear-gradient(180deg,#1d1216,#141015)}
 .pick .lab2{font-size:10.5px;letter-spacing:.26em;color:var(--red2);margin-bottom:12px}
 .pick h3{font-size:24px;margin-bottom:6px}
@@ -151,8 +156,18 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 
 /* ---- 阅读推荐结果页：作品清单 ---- */
 .mediaSec{margin-bottom:34px}
-.mediaTitle{font-size:17px;color:var(--ink);margin:0 0 14px;padding-bottom:10px;border-bottom:1px solid var(--line);font-weight:400}
-.mediaTitle span{font-size:12px;color:var(--gold);margin-left:6px}
+.mediaHead{
+  width:100%;display:flex;align-items:center;gap:9px;
+  padding:0 0 10px;border-bottom:1px solid var(--line);
+  cursor:pointer;user-select:none;text-align:left;
+}
+.mediaHead .caret{font-size:10px;color:var(--dim2);display:inline-block;transition:transform .2s ease}
+.mediaSec.folded .mediaHead .caret{transform:rotate(-90deg)}
+.mediaHead .mtName{font-size:17px;color:var(--ink);font-weight:400}
+.mediaHead:hover .mtName{color:var(--gold)}
+.mediaHead .mtCount{font-size:12px;color:var(--gold);margin-left:2px}
+.mediaBody{margin-top:14px}
+.mediaSec.folded .mediaBody{display:none}
 .workCard{background:var(--panel);border:1px solid var(--line);border-radius:2px;padding:14px 18px;margin-bottom:10px}
 .workCard .wt{font-size:14px;color:var(--ink);margin-bottom:3px}
 .workCard .wt a{color:var(--gold);text-decoration:none}
@@ -535,9 +550,14 @@ function result(app) {
     const sec = el("div", "mediaSec");
     const items = reco[mk] || [];
     anyWork = anyWork || items.length > 0;
-    sec.appendChild(el("h3", "mediaTitle", `${D.mediaOptions[mi]}　<span>${items.length}</span>`));
+    const head = el("button", "mediaHead",
+      `<span class="caret">▾</span><span class="mtName">${D.mediaOptions[mi]}</span><span class="mtCount">${items.length}</span>`);
+    head.type = "button";
+    const body = el("div", "mediaBody");
+    head.onclick = () => sec.classList.toggle("folded");
+    sec.appendChild(head);
     if (!items.length) {
-      sec.appendChild(el("div", "note", "本类暂无条目，可按标签继续补充。"));
+      body.appendChild(el("div", "note", "本类暂无条目，可按标签继续补充。"));
     } else {
       items.slice(0, 20).forEach(rec => {
         const wk = rec.work;
@@ -549,10 +569,11 @@ function result(app) {
           `<div class="whit">命中：${rec.why.join(" · ")}</div>` +
           `<div class="wn">${wk.note || ""}</div>` +
           `${wk.link ? "" : `<div class="wsearch">检索：${esc(rec.search || wk.title)}</div>`}`;
-        sec.appendChild(card);
+        body.appendChild(card);
       });
-      if (items.length > 20) sec.appendChild(el("div", "note", `仅显示前 20 条，共 ${items.length} 条。`));
+      if (items.length > 20) body.appendChild(el("div", "note", `仅显示前 20 条，共 ${items.length} 条。`));
     }
+    sec.appendChild(body);
     w.appendChild(sec);
   });
   if (!anyWork) w.appendChild(el("div", "card", "作品库当前条目较少。按标签填入后，这里会自动出现对应作品。"));
@@ -869,13 +890,19 @@ function atlas(app) {
       it.innerHTML = `<h4 class="serif">${String(t.n).padStart(2, "0")}　${t.name}</h4>
         <div class="term">${t.term}</div>
         <div class="ex">${t.explain}</div>
-        ${t.works && t.works.length ? `<div class="aitem-works">${t.works.map(w => {
+        ${t.works && t.works.length ? `<div class="aworksToggle"><span class="caret">▾</span> 参考作品 ${t.works.length}</div><div class="aitem-works">${t.works.map(w => {
           const meta = [w.author, w.year, TYPE_CN[w.type] || w.type].filter(Boolean).join(" · ");
           const name = w.link ? `<a href="${w.link}" target="_blank" rel="noopener">${w.title}</a>` : w.title;
           return `<div class="work"><div class="wt">${name}</div>${meta ? `<div class="wm">${meta}</div>` : ""}${w.note ? `<div class="wn">${w.note}</div>` : ""}</div>`;
         }).join("")}</div>` : ""}
         <div class="ax">${Object.keys(t.axes).map(k => AX[k] + (t.axes[k] > 0 ? "+" : "") + t.axes[k]).join("　")}
           ｜ ${t.hooks.map(h => HK[h]).join("、")}</div>`;
+      const awt = it.querySelector(".aworksToggle");
+      if (awt) awt.onclick = () => {
+        const body = it.querySelector(".aitem-works");
+        body.classList.toggle("open");
+        awt.classList.toggle("collapsed");
+      };
       box.appendChild(it);
     });
     if (!box.children.length) box.innerHTML = `<div class="note">没有匹配的题材。</div>`;
